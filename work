@@ -1,1 +1,15 @@
+# Build a compact summary from the complete uploaded dataset.
+# The full dataframe is NOT sent to the LLM.
+# This allows AI suggestions to be based on the actual dataset
+# while keeping the LLM request small.
+summary = {
+    "row_count": len(df),
+    "column_count": len(df.columns),
+    "columns": list(df.columns),
+    "numeric_columns": df.select_dtypes(include="number").columns.tolist(),
+    "categorical_columns": df.select_dtypes(include=["object", "string"]).columns.tolist(),
+    "datetime_columns": df.select_dtypes(include=["datetime", "datetimetz"]).columns.tolist(),
+}
 
+print("STEP 5 - DATASET SUMMARY CREATED")
+print(summary)
