@@ -1,1 +1,596 @@
 
+STEP 4- AFTER READ_JSON
+(4205, 31)
+STEP 5 - DATASET SUMMARY CREATED
+ROWS: 4205
+COLUMNS: 31
+Client Name -> dtype=categorical, missing=0.17%, unique=1202
+Marsha -> dtype=categorical, missing=57.62%, unique=555
+Property Name -> dtype=categorical, missing=77.31%, unique=451
+Invoice No -> dtype=categorical, missing=0.17%, unique=4198
+Invoice Date -> dtype=temporal, missing=0.17%, unique=528
+Due Days -> dtype=numeric, missing=0.17%, unique=528
+Revenue Head -> dtype=categorical, missing=8.25%, unique=26
+Nature of Services -> dtype=categorical, missing=8.25%, unique=6
+Service -> dtype=categorical, missing=0.17%, unique=48
+Invoice Amount -> dtype=numeric, missing=0.1%, unique=2017
+Below 30 Days -> dtype=numeric, missing=0.14%, unique=843
+Overdue 30 - 60 Days -> dtype=numeric, missing=0.17%, unique=440
+Overdue 60 - 180 Days -> dtype=numeric, missing=0.17%, unique=502
+Overdue Above 180 Days -> dtype=numeric, missing=0.17%, unique=249
+Above 1 year -> dtype=numeric, missing=0.17%, unique=292
+Balance Collection Amount -> dtype=numeric, missing=0.17%, unique=401
+Credit Note Issued -> dtype=numeric, missing=0.17%, unique=4
+Balance Amount -> dtype=numeric, missing=0.17%, unique=2376
+Unnamed: 18 -> dtype=numeric, missing=79.5%, unique=173
+Forex Balance Amount -> dtype=numeric, missing=0.17%, unique=209
+Particulars -> dtype=categorical, missing=0.17%, unique=3881
+Manager -> dtype=categorical, missing=0.17%, unique=79
+Partner -> dtype=categorical, missing=0.17%, unique=10
+Department -> dtype=categorical, missing=0.17%, unique=8
+Company Group -> dtype=categorical, missing=0.17%, unique=5
+Group -> dtype=categorical, missing=0.17%, unique=275
+Contact Person Name -> dtype=categorical, missing=8.7%, unique=1194
+Brand Name -> dtype=categorical, missing=98.12%, unique=19
+Project MID -> dtype=categorical, missing=10.15%, unique=1881
+Country -> dtype=categorical, missing=0.17%, unique=43
+GST NO -> dtype=numeric, missing=0.17%, unique=569
+STEP 6 - BEFORE ANALYZE
+[INFO] Sending data to LLM for analysis...
+
+===== PROMPT =====
+You are a senior data analytics consultant. Analyze the uploaded dataset and generate a professional, data-grounded dashboard configuration with executive insights.
+
+CONTEXT:
+No additional context provided
+
+=============================================================================
+COLUMN PROFILES
+=============================================================================
+
+The following column profiles describe the schema of the uploaded dataset.
+
+{
+  "Client Name": {
+    "dtype": "categorical",
+    "cardinality": 1202,
+    "missing_pct": 0.2,
+    "range": null,
+    "top_values": [
+      "GRASIM INDS LTD",
+      "DUET INDIA HOTELS (CHENNAI OMR) PVT. LTD.",
+      "GRASIM INDUSTRIES LIMITED",
+      "PALLAZZIO HOTELS & LEISURE LTD.",
+      "GRASIM INDUSTRIES LIMITED, STAPLE FIBRE DIVISION, NAGDA"
+    ],
+    "is_temporal": false,
+    "has_outliers": false
+  },
+  "Marsha": {
+    "dtype": "categorical",
+    "cardinality": 555,
+    "missing_pct": 57.6,
+    "range": null,
+    "top_values": [
+      "MAAFO",
+      "BOMXR",
+      "IDRSI",
+      "DEDFI",
+      "."
+    ],
+    "is_temporal": false,
+    "has_outliers": false
+  },
+  "Property Name": {
+    "dtype": "categorical",
+    "cardinality": 451,
+    "missing_pct": 77.3,
+    "range": null,
+    "top_values": [
+      "Four Points by Sheraton Chennai OMR",
+      "The St. Regis Mumbai",
+      "Fairfield By Marriott Dehradun",
+      "FAIRFIELD BY MARRIOTT JAIPUR TONK ROAD",
+      "COURTYARD BY MARRIOTT RANCHI"
+    ],
+    "is_temporal": false,
+    "has_outliers": false
+  },
+  "Invoice No": {
+    "dtype": "categorical",
+    "cardinality": 4198,
+    "missing_pct": 0.2,
+    "range": null,
+    "top_values": [
+      "OSO2526-27011449",
+      "OSO2526-27040019",
+      "OSO2526-27040020",
+      "OSO2526-27011602",
+      "OSO2526-27020476"
+    ],
+    "is_temporal": false,
+    "has_outliers": false
+  },
+  "Invoice Date": {
+    "dtype": "temporal",
+    "cardinality": 528,
+    "missing_pct": 0.2,
+    "range": null,
+    "top_values": [
+      "2026-02-05",
+      "2026-03-06",
+      "2026-03-09",
+      "2026-03-05",
+      "2026-02-04"
+    ],
+    "is_temporal": true,
+    "has_outliers": false
+  },
+  "Due Days": {
+    "dtype": "numeric",
+    "cardinality": 528,
+    "missing_pct": 0.2,
+    "range": null,
+    "top_values": [
+      "39.0",
+      "10.0",
+      "7.0",
+      "11.0",
+      "40.0"
+    ],
+    "is_temporal": false,
+    "has_outliers": false
+  },
+  "Revenue Head": {
+    "dtype": "categorical",
+    "cardinality": 26,
+    "missing_pct": 8.3,
+    "range": null,
+    "top_values": [
+      "Payroll Management",
+      "SAM",
+      "DMS",
+      "HRMS",
+      "Recon Tool"
+    ],
+    "is_temporal": false,
+    "has_outliers": false
+  },
+  "Nature of Services": {
+    "dtype": "categorical",
+    "cardinality": 6,
+    "missing_pct": 8.3,
+    "range": null,
+    "top_values": [
+      "Local",
+      "Export",
+      "Exempt",
+      "ON ACCOUNT",
+      "LOCAL"
+    ],
+    "is_temporal": false,
+    "has_outliers": false
+  },
+  "Service": 
+==================
+
+[INFO] Base URL : https://litellm.osourceglobal.com:/v1
+[INFO] Model    : local-qwen3.6-nvfp4-vllm
+[DEBUG] Response Status: 200
+
+===== LLM RESPONSE =====
+{
+  "executive_summary": {
+    "key_findings": [
+      "The dataset contains 4,205 records with a total Invoice Amount of approximately 242.98 million. The mean invoice value is 57,838.55, but the median is significantly lower at 23,010.0, indicating a right-skewed distribution where a small number of high-value invoices drive the total volume.",
+      "Revenue concentration is heavily skewed towards specific service lines. 'Payroll Management' accounts for 38.44% of records, followed by 'SAM' (15.71%) and 'DMS' (12.16%). Similarly, the 'PAYROLL' service category represents 34.64% of the dataset, suggesting astrong focus on payroll-related solutions.",
+      "Geographic distribution is dominated by India, which accounts for 79.16% of the records, while international markets like China (7.12%), Thailand (2.12%), and UAE (1.64%) represent smaller segments. This indicates a primarily domestic business focus with limited international exposure in this dataset."
+    ],
+    "data_quality_score": 0.65,
+    "overall_health": "Caution",
+    "missing_data_pct": 12.45,
+    "reliability": "Medium"
+  },
+  "trends": [
+    {
+      "column": "Invoice Date",
+      "direction": "insufficient_evidence",
+      "growth_rate": null,
+      "evidence": "The dataset statistics indicate that the temporal column 'Invoice Date' has a min_date and max_date of '1970-01-01' with a date_span_days of 0. This suggests a data parsing or storage error where valid dates were not correctly ingested, making trend analysis impossible."
+    }
+  ],
+  "data_quality": {
+    "missing_values": {
+      "Brand Name": 98.12,
+      "Property Name": 77.31,
+      "Unnamed: 18": 79.5,
+      "Marsha": 57.62,
+      "Revenue Head": 8.25,
+      "Nature of Services": 8.25,
+      "Contact Person Name": 8.7
+    },
+    "outliers_detected": false,
+    "data_completeness": 87.55,
+    "recommendation": "Critical data quality issues exist in 'Brand Name' (98.12% missing), 'Unnamed: 18' (79.5% missing), and 'Property Name' (77.31% missing). These columns should be investigated for extraction errors or excluded from primary analysis. Additionally, the 'Invoice Date' column appears to have invalid date values (1970-01-01), requiring immediate data engineering intervention to restore temporal functionality."
+  },
+  "insights": [
+    "The high percentage of missing values in 'Brand Name' (98.12%) and 'Property Name' (77.31%) severely limits the ability to analyze performance at the brand or property level. Analysis is currently restricted to higher-level groupings like 'Company Group' or 'Group'.",
+    "The 'Balance Collection Amount' column contains only negative values and zeros, with a mean of -5,881.63. This suggests that this column may represent credits, adjustments, or unpaid balances rather than collected cash, requiring clarification on its business definition.",
+    "The 'GST NO' column is entirely numeric with a value of 0 for all rows, indicating that GST information is either not captured or incorrectly formatted in this dataset, limiting tax compliance analysis.",
+    "The 'Due Days' metric shows a wide range (3 to 2180 days) with a mean of 149.87 days, suggesting significant variability in payment terms or collection delays across different clients or services."
+  ],
+  "recommendations": [
+    "Investigate and rectify the 'Invoice Date' column to restore temporal analysis capabilities, as the current data suggests a parsing failure.",
+    "Review the data source for 'Brand Name' and 'Property Name' to determine if the high missingness is due to system limitations ordata entry errors, and consider imputing or excluding these fields from key performance indicators.",
+    "Clarify the business definition of 'Balance Collection Amount' to ensure accurate financial reporting, as the negative values suggest it may not represent positive cash inflow.",
+    "Monitor the 'Overdue 30 - 60 Days' and 'Overdue 60 - 180 Days' columns to identify clients with persistent payment delays, as these columns show significant non-zero values."
+  ],
+  "filters": [
+    {
+      "column": "Company Group",
+      "filter_type": "dropdown",
+      "label": "Company Group"
+    },
+    {
+      "column": "Service",
+      "filter_type": "dropdown",
+      "label": "Service"
+    },
+    {
+      "column": "Country",
+      "filter_type": "dropdown",
+      "label": "Country"
+    }
+  ],
+  "kpis": [
+    {
+      "metric": "Invoice Amount",
+      "aggregation": "sum",
+      "label": "Total Invoice Amount"
+    },
+    {
+      "metric": "Invoice Amount",
+      "aggregation": "mean",
+      "label": "Average Invoice Amount"
+    },
+    {
+      "metric": "Invoice No",
+      "aggregation": "count",
+      "label": "Total Number of Invoices"
+    },
+    {
+      "metric": "Due Days",
+      "aggregation": "mean",
+      "label": "Average Due Days"
+    },
+    {
+      "metric": "Balance Amount",
+      "aggregation": "sum",
+      "label": "Total Balance Amount"
+    }
+  ],
+  "charts": [
+    {
+      "chart_id": "chart-0",
+========================
+
+
+====RAW LLM RESPONSE====
+{
+  "executive_summary": {
+    "key_findings": [
+      "The dataset contains 4,205 records with a total Invoice Amount of approximately 242.98 million. The mean invoice value is 57,838.55, but the median is significantly lower at 23,010.0, indicating a right-skewed distribution where a small number of high-value invoices drive the total volume.",
+      "Revenue concentration is heavily skewed towards specific service lines. 'Payroll Management' accounts for 38.44% of records, followed by 'SAM' (15.71%) and 'DMS' (12.16%). Similarly, the 'PAYROLL' service category represents 34.64% of the dataset, suggesting astrong focus on payroll-related solutions.",
+      "Geographic distribution is dominated by India, which accounts for 79.16% of the records, while international markets like China (7.12%), Thailand (2.12%), and UAE (1.64%) represent smaller segments. This indicates a primarily domestic business focus with limited international exposure in this dataset."
+    ],
+    "data_quality_score": 0.65,
+    "overall_health": "Caution",
+    "missing_data_pct": 12.45,
+    "reliability": "Medium"
+  },
+  "trends": [
+    {
+      "column": "Invoice Date",
+      "direction": "insufficient_evidence",
+      "growth_rate": null,
+      "evidence": "The dataset statistics indicate that the temporal column 'Invoice Date' has a min_date and max_date of '1970-01-01' with a date_span_days of 0. This suggests a data parsing or storage error where valid dates were not correctly ingested, making trend analysis impossible."
+    }
+  ],
+  "data_quality": {
+    "missing_values": {
+      "Brand Name": 98.12,
+      "Property Name": 77.31,
+      "Unnamed: 18": 79.5,
+      "Marsha": 57.62,
+      "Revenue Head": 8.25,
+      "Nature of Services": 8.25,
+      "Contact Person Name": 8.7
+    },
+    "outliers_detected": false,
+    "data_completeness": 87.55,
+    "recommendation": "Critical data quality issues exist in 'Brand Name' (98.12% missing), 'Unnamed: 18' (79.5% missing), and 'Property Name' (77.31% missing). These columns should be investigated for extraction errors or excluded from primary analysis. Additionally, the 'Invoice Date' column appears to have invalid date values (1970-01-01), requiring immediate data engineering intervention to restore temporal functionality."
+  },
+  "insights": [
+    "The high percentage of missing values in 'Brand Name' (98.12%) and 'Property Name' (77.31%) severely limits the ability to analyze performance at the brand or property level. Analysis is currently restricted to higher-level groupings like 'Company Group' or 'Group'.",
+    "The 'Balance Collection Amount' column contains only negative values and zeros, with a mean of -5,881.63. This suggests that this column may represent credits, adjustments, or unpaid balances rather than collected cash, requiring clarification on its business definition.",
+    "The 'GST NO' column is entirely numeric with a value of 0 for all rows, indicating that GST information is either not captured or incorrectly formatted in this dataset, limiting tax compliance analysis.",
+    "The 'Due Days' metric shows a wide range (3 to 2180 days) with a mean of 149.87 days, suggesting significant variability in payment terms or collection delays across different clients or services."
+  ],
+  "recommendations": [
+    "Investigate and rectify the 'Invoice Date' column to restore temporal analysis capabilities, as the current data suggests a parsing failure.",
+    "Review the data source for 'Brand Name' and 'Property Name' to determine if the high missingness is due to system limitations ordata entry errors, and consider imputing or excluding these fields from key performance indicators.",
+    "Clarify the business definition of 'Balance Collection Amount' to ensure accurate financial reporting, as the negative values suggest it may not represent positive cash inflow.",
+    "Monitor the 'Overdue 30 - 60 Days' and 'Overdue 60 - 180 Days' columns to identify clients with persistent payment delays, as these columns show significant non-zero values."
+  ],
+  "filters": [
+    {
+      "column": "Company Group",
+      "filter_type": "dropdown",
+      "label": "Company Group"
+    },
+    {
+      "column": "Service",
+      "filter_type": "dropdown",
+      "label": "Service"
+    },
+    {
+      "column": "Country",
+      "filter_type": "dropdown",
+      "label": "Country"
+    }
+  ],
+  "kpis": [
+    {
+      "metric": "Invoice Amount",
+      "aggregation": "sum",
+      "label": "Total Invoice Amount"
+    },
+    {
+      "metric": "Invoice Amount",
+      "aggregation": "mean",
+      "label": "Average Invoice Amount"
+    },
+    {
+      "metric": "Invoice No",
+      "aggregation": "count",
+      "label": "Total Number of Invoices"
+    },
+    {
+      "metric": "Due Days",
+      "aggregation": "mean",
+      "label": "Average Due Days"
+    },
+    {
+      "metric": "Balance Amount",
+      "aggregation": "sum",
+      "label": "Total Balance Amount"
+    }
+  ],
+  "charts": [
+    {
+      "chart_id": "chart-0",
+      "type": "bar",
+      "x": "Service",
+      "y": "Invoice Amount",
+      "title": "Invoice Amount by Service",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-1",
+      "type": "bar",
+      "x": "Company Group",
+      "y": "Invoice Amount",
+      "title": "Invoice Amount by Company Group",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-2",
+      "type": "pie",
+      "x": "Nature of Services",
+      "y": "Invoice Amount",
+      "title": "Distribution of Invoice Amount by Nature of Services",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-3",
+      "type": "bar",
+      "x": "Country",
+      "y": "Invoice Amount",
+      "title": "Invoice Amount by Country",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-4",
+      "type": "bar",
+      "x": "Department",
+      "y": "Invoice Amount",
+      "title": "Invoice Amount by Department",
+      "size": "1/2"
+    }
+  ],
+  "layout_grid": "2-col",
+  "narrative": "This dashboard provides an overview of invoice data, highlighting significant revenue concentration in specific services like Payroll and SAM, and a strong domestic focus in India. However, the analysis is constrained by critical data quality issues, particularly in the 'Invoice Date' column which appears to have invalid values, and high missingness in 'Brand Name' and 'Property Name'. Users should prioritize resolving these data integrity issues before relying on this dashboard for strategic decision-making. The current view allows for segmentation by Company Group, Service, and Country, providing a high-level understanding of revenue distribution and service mix."
+}
+===========================
+
+====CHARTS FROM LLM====
+[{'chart_id': 'chart-0', 'type': 'bar', 'x': 'Service', 'y': 'Invoice Amount', 'title': 'Invoice Amount by Service', 'size': '1/2'}, {'chart_id': 'chart-1', 'type': 'bar', 'x': 'Company Group', 'y': 'Invoice Amount', 'title': 'Invoice Amount by Company Group', 'size': '1/2'}, {'chart_id': 'chart-2', 'type': 'pie', 'x': 'Nature of Services', 'y': 'Invoice Amount', 'title': 'Distribution of Invoice Amount by Nature of Services', 'size': '1/2'}, {'chart_id': 'chart-3', 'type': 'bar', 'x': 'Country', 'y': 'Invoice Amount', 'title': 'Invoice Amount by Country', 'size': '1/2'}, {'chart_id': 'chart-4', 'type': 'bar', 'x': 'Department', 'y': 'Invoice Amount', 'title': 'Invoice Amount by Department', 'size': '1/2'}]
+====================
+
+
+====CONFIG_DICT====
+{'executive_summary': {'key_findings': ['The dataset contains 4,205 records with a total Invoice Amount of approximately 242.98 million. The mean invoice value is 57,838.55, but the median is significantly lower at 23,010.0, indicating a right-skewed distribution where a small number of high-value invoices drive the total volume.', "Revenue concentration is heavily skewed towards specific service lines. 'Payroll Management' accounts for 38.44% of records, followed by 'SAM' (15.71%) and 'DMS' (12.16%). Similarly, the 'PAYROLL' service category represents 34.64% of the dataset, suggesting a strong focus on payroll-related solutions.", 'Geographic distribution is dominated by India, which accounts for 79.16% of the records, while international markets like China (7.12%), Thailand (2.12%), and UAE (1.64%) represent smaller segments. This indicates a primarily domestic business focus with limited international exposure in this dataset.'], 'data_quality_score': 0.65, 'overall_health': 'Caution', 'missing_data_pct': 12.45, 'reliability': 'Medium'}, 'trends': [{'column': 'Invoice Date', 'direction': 'insufficient_evidence', 'growth_rate': None, 'evidence': "The dataset statistics indicate that the temporal column 'Invoice Date' has a min_date and max_date of '1970-01-01' with a date_span_days of 0. This suggests a data parsing or storage error where valid dates were not correctly ingested, making trend analysis impossible."}], 'data_quality': {'missing_values': {'Brand Name': 98.12, 'Property Name': 77.31, 'Unnamed: 18': 79.5, 'Marsha': 57.62, 'Revenue Head': 8.25, 'Nature of Services': 8.25, 'Contact Person Name': 8.7}, 'outliers_detected': False, 'data_completeness': 87.55, 'recommendation': "Critical data quality issues exist in 'Brand Name' (98.12% missing), 'Unnamed: 18' (79.5% missing), and 'Property Name' (77.31% missing). These columns should be investigated for extraction errors or excluded from primary analysis. Additionally, the 'Invoice Date' column appears to have invalid date values (1970-01-01), requiring immediate data engineering intervention to restore temporal functionality."}, 'insights': ["Thehigh percentage of missing values in 'Brand Name' (98.12%) and 'Property Name' (77.31%) severely limits the ability to analyze performance at the brand or property level. Analysis is currently restricted to higher-level groupings like 'Company Group' or 'Group'.", "The 'Balance Collection Amount' column contains only negative values and zeros, with a mean of -5,881.63. This suggests that this column may represent credits, adjustments, or unpaid balances rather than collected cash, requiring clarification on its business definition.", "The 'GST NO' column is entirely numeric with a value of 0 for all rows, indicating that GST information is either not captured or incorrectly formatted in this dataset, limiting tax compliance analysis.", "The 'Due Days' metric shows a wide range (3 to 2180 days) with a mean of 149.87 days, suggesting significant variability in payment terms or collection delays across different clients or services."], 'recommendations': ["Investigate and rectify the 'Invoice Date' column to restore temporal analysis capabilities, as the current data suggests a parsing failure.", "Review the data source for 'Brand Name' and 'Property Name' to determine if the high missingness is due to system limitations or data entry errors, and consider imputing or excluding these fields from key performance indicators.", "Clarify the business definition of 'Balance Collection Amount' to ensure accurate financial reporting, as the negative values suggest it may not represent positive cash inflow.", "Monitor the 'Overdue 30 - 60 Days' and 'Overdue 60 - 180 Days' columns to identify clients with persistent payment delays, as these columns show significant non-zero values."], 'filters': [{'column': 'Company Group', 'filter_type': 'dropdown', 'label': 'Company Group'}, {'column': 'Service', 'filter_type': 'dropdown', 'label': 'Service'}, {'column':'Country', 'filter_type': 'dropdown', 'label': 'Country'}], 'kpis': [{'metric': 'Invoice Amount', 'aggregation': 'sum', 'label': 'Total Invoice Amount'}, {'metric': 'Invoice Amount', 'aggregation': 'mean', 'label': 'Average Invoice Amount'}, {'metric': 'Invoice No', 'aggregation': 'count', 'label': 'Total Number of Invoices'}, {'metric': 'Due Days', 'aggregation': 'mean', 'label': 'Average Due Days'}, {'metric': 'Balance Amount', 'aggregation': 'sum', 'label': 'Total Balance Amount'}], 'charts': [{'chart_id': 'chart-0', 'type': 'bar', 'x': 'Service', 'y': 'Invoice Amount', 'title': 'Invoice Amount by Service', 'size': '1/2'}, {'chart_id': 'chart-1', 'type': 'bar', 'x': 'Company Group', 'y': 'Invoice Amount', 'title': 'Invoice Amount by Company Group', 'size': '1/2'}, {'chart_id': 'chart-2', 'type': 'pie', 'x': 'Nature of Services', 'y': 'Invoice Amount', 'title': 'Distribution of Invoice Amount by Nature of Services', 'size': '1/2'}, {'chart_id': 'chart-3', 'type': 'bar', 'x': 'Country', 'y': 'Invoice Amount', 'title': 'Invoice Amount by Country', 'size':'1/2'}, {'chart_id': 'chart-4', 'type': 'bar', 'x': 'Department', 'y': 'Invoice Amount', 'title': 'Invoice Amount by Department', 'size': '1/2'}], 'layout_grid': '2-col', 'narrative': "This dashboard provides an overview of invoice data, highlighting significant revenue concentration in specific services like Payroll and SAM, and a strong domestic focus in India. However, the analysis is constrained by critical data quality issues, particularly in the 'Invoice Date' column which appears to have invalid values, and high missingness in 'Brand Name' and 'Property Name'. Users should prioritize resolving these data integrity issues before relying on this dashboard for strategic decision-making. The current view allows for segmentation by Company Group, Service, and Country, providing a high-levelunderstanding of revenue distribution and service mix."}
+======================
+[OK] LLM analysis successful
+[INFO] LLM suggested: 3 filters, 5 KPIs, 5 charts
+
+====CONFIG_DICT====
+{
+  "executive_summary": {
+    "key_findings": [
+      "The dataset contains 4,205 records with a total Invoice Amount of approximately 242.98 million. The mean invoice value is 57,838.55, but the median is significantly lower at 23,010.0, indicating a right-skewed distribution where a small number of high-value invoices drive the total volume.",
+      "Revenue concentration is heavily skewed towards specific service lines. 'Payroll Management' accounts for 38.44% of records, followed by 'SAM' (15.71%) and 'DMS' (12.16%). Similarly, the 'PAYROLL' service category represents 34.64% of the dataset, suggesting astrong focus on payroll-related solutions.",
+      "Geographic distribution is dominated by India, which accounts for 79.16% of the records, while international markets like China (7.12%), Thailand (2.12%), and UAE (1.64%) represent smaller segments. This indicates a primarily domestic business focus with limited international exposure in this dataset."
+    ],
+    "data_quality_score": 0.65,
+    "overall_health": "Caution",
+    "missing_data_pct": 12.45,
+    "reliability": "Medium"
+  },
+  "trends": [
+    {
+      "column": "Invoice Date",
+      "direction": "insufficient_evidence",
+      "growth_rate": null,
+      "evidence": "The dataset statistics indicate that the temporal column 'Invoice Date' has a min_date and max_date of '1970-01-01' with a date_span_days of 0. This suggests a data parsing or storage error where valid dates were not correctly ingested, making trend analysis impossible."
+    }
+  ],
+  "data_quality": {
+    "missing_values": {
+      "Brand Name": 98.12,
+      "Property Name": 77.31,
+      "Unnamed: 18": 79.5,
+      "Marsha": 57.62,
+      "Revenue Head": 8.25,
+      "Nature of Services": 8.25,
+      "Contact Person Name": 8.7
+    },
+    "outliers_detected": false,
+    "data_completeness": 87.55,
+    "recommendation": "Critical data quality issues exist in 'Brand Name' (98.12% missing), 'Unnamed: 18' (79.5% missing), and 'Property Name' (77.31% missing). These columns should be investigated for extraction errors or excluded from primary analysis. Additionally, the 'Invoice Date' column appears to have invalid date values (1970-01-01), requiring immediate data engineering intervention to restore temporal functionality."
+  },
+  "insights": [
+    "The high percentage of missing values in 'Brand Name' (98.12%) and 'Property Name' (77.31%) severely limits the ability to analyze performance at the brand or property level. Analysis is currently restricted to higher-level groupings like 'Company Group' or 'Group'.",
+    "The 'Balance Collection Amount' column contains only negative values and zeros, with a mean of -5,881.63. This suggests that this column may represent credits, adjustments, or unpaid balances rather than collected cash, requiring clarification on its business definition.",
+    "The 'GST NO' column is entirely numeric with a value of 0 for all rows, indicating that GST information is either not captured or incorrectly formatted in this dataset, limiting tax compliance analysis.",
+    "The 'Due Days' metric shows a wide range (3 to 2180 days) with a mean of 149.87 days, suggesting significant variability in payment terms or collection delays across different clients or services."
+  ],
+  "recommendations": [
+    "Investigate and rectify the 'Invoice Date' column to restore temporal analysis capabilities, as the current data suggests a parsing failure.",
+    "Review the data source for 'Brand Name' and 'Property Name' to determine if the high missingness is due to system limitations ordata entry errors, and consider imputing or excluding these fields from key performance indicators.",
+    "Clarify the business definition of 'Balance Collection Amount' to ensure accurate financial reporting, as the negative values suggest it may not represent positive cash inflow.",
+    "Monitor the 'Overdue 30 - 60 Days' and 'Overdue 60 - 180 Days' columns to identify clients with persistent payment delays, as these columns show significant non-zero values."
+  ],
+  "filters": [
+    {
+      "column": "Company Group",
+      "filter_type": "dropdown",
+      "label": "Company Group"
+    },
+    {
+      "column": "Service",
+      "filter_type": "dropdown",
+      "label": "Service"
+    },
+    {
+      "column": "Country",
+      "filter_type": "dropdown",
+      "label": "Country"
+    }
+  ],
+  "kpis": [
+    {
+      "metric": "Invoice Amount",
+      "aggregation": "sum",
+      "label": "Total Invoice Amount"
+    },
+    {
+      "metric": "Invoice Amount",
+      "aggregation": "mean",
+      "label": "Average Invoice Amount"
+    },
+    {
+      "metric": "Invoice No",
+      "aggregation": "count",
+      "label": "Total Number of Invoices"
+    },
+    {
+      "metric": "Due Days",
+      "aggregation": "mean",
+      "label": "Average Due Days"
+    },
+    {
+      "metric": "Balance Amount",
+      "aggregation": "sum",
+      "label": "Total Balance Amount"
+    }
+  ],
+  "charts": [
+    {
+      "chart_id": "chart-0",
+      "type": "bar",
+      "x": "Service",
+      "y": "Invoice Amount",
+      "title": "Invoice Amount by Service",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-1",
+      "type": "bar",
+      "x": "Company Group",
+      "y": "Invoice Amount",
+      "title": "Invoice Amount by Company Group",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-2",
+      "type": "pie",
+      "x": "Nature of Services",
+      "y": "Invoice Amount",
+      "title": "Distribution of Invoice Amount by Nature of Services",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-3",
+      "type": "bar",
+      "x": "Country",
+      "y": "Invoice Amount",
+      "title": "Invoice Amount by Country",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-4",
+      "type": "bar",
+      "x": "Department",
+      "y": "Invoice Amount",
+      "title": "Invoice Amount by Department",
+      "size": "1/2"
+    }
+  ],
+  "layout_grid": "2-col",
+  "narrative": "This dashboard provides an overview of invoice data, highlighting significant revenue concentration in specific services like Payroll and SAM, and a strong domestic focus in India. However, the analysis is constrained by critical data quality issues, particularly in the 'Invoice Date' column which appears to have invalid values, and high missingness in 'Brand Name' and 'Property Name'. Users should prioritize resolving these data integrity issues before relying on this dashboard for strategic decision-making. The current view allows for segmentation by Company Group, Service, and Country, providing a high-level understanding of revenue distribution and service mix."
+}
+=======================
+
+FILTER RAW: {'column': 'Company Group', 'filter_type': 'dropdown', 'label': 'Company Group'}
+FILTER RAW: {'column': 'Service', 'filter_type': 'dropdown', 'label': 'Service'}
+FILTER RAW: {'column': 'Country', 'filter_type': 'dropdown', 'label': 'Country'}
+KPI RAW: {'metric': 'Invoice Amount', 'aggregation': 'sum', 'label': 'Total Invoice Amount'}
+KPI RAW: {'metric': 'Invoice Amount', 'aggregation': 'mean', 'label': 'Average Invoice Amount'}
+KPI RAW: {'metric': 'Invoice No', 'aggregation': 'count', 'label': 'Total Number of Invoices'}
+KPI RAW: {'metric': 'Due Days', 'aggregation': 'mean', 'label': 'Average Due Days'}
+KPI RAW: {'metric': 'Balance Amount', 'aggregation': 'sum', 'label': 'Total Balance Amount'}
+CHART RAW: {'chart_id': 'chart-0', 'type': 'bar', 'x': 'Service', 'y': 'Invoice Amount', 'title': 'Invoice Amount by Service', 'size': '1/2'}
+CHART RAW: {'chart_id': 'chart-1', 'type': 'bar', 'x': 'Company Group', 'y': 'Invoice Amount', 'title': 'Invoice Amount by Company Group', 'size': '1/2'}
+CHART RAW: {'chart_id': 'chart-2', 'type': 'pie', 'x': 'Nature of Services', 'y': 'Invoice Amount', 'title': 'Distribution of InvoiceAmount by Nature of Services', 'size': '1/2'}
+CHART RAW: {'chart_id': 'chart-3', 'type': 'bar', 'x': 'Country', 'y': 'Invoice Amount', 'title': 'Invoice Amount by Country', 'size': '1/2'}
+CHART RAW: {'chart_id': 'chart-4', 'type': 'bar', 'x': 'Department', 'y': 'Invoice Amount', 'title': 'Invoice Amount by Department', 'size': '1/2'}
+
+====FINAL CONFIG====
+Filters: 3
+KPIs: 5
+Charts: 5
+=======================
+
+STEP 7 - AFTER ANALYZE
+<class 'core.config.DashboardConfig'>
+DashboardConfig(filters=[FilterConfig(column='Company Group', filter_type='dropdown', label='Company Group', default_value=None), FilterConfig(column='Service', filter_type='dropdown', label='Service', default_value=None), FilterConfig(column='Country', filter_type='dropdown', label='Country', default_value=None)], kpis=[KPIConfig(metric='Invoice Amount', aggregation='sum', label='Total Invoice Amount', color='#1A365D', bg_color='#EFF6FF'), KPIConfig(metric='Invoice Amount', aggregation='mean', label='Average Invoice Amount', color='#1A365D', bg_color='#EFF6FF'), KPIConfig(metric='Invoice No', aggregation='count', label='Total Number of Invoices', color='#1A365D', bg_color='#EFF6FF'), KPIConfig(metric='Due Days', aggregation='mean', label='Average Due Days', color='#1A365D', bg_color='#EFF6FF'), KPIConfig(metric='Balance Amount', aggregation='sum', label='Total Balance Amount', color='#1A365D', bg_color='#EFF6FF')], charts=[ChartConfig(chart_id='chart-0', chart_type='bar', x_column='Service', y_column='Invoice Amount', groupby_column=None, size='1/2', aggregation='sum', title='Invoice Amount by Service'), ChartConfig(chart_id='chart-1', chart_type='bar', x_column='Company Group', y_column='Invoice Amount', groupby_column=None, size='1/2', aggregation='sum', title='Invoice Amount by Company Group'), ChartConfig(chart_id='chart-2', chart_type='pie', x_column='Nature of Services', y_column='Invoice Amount', groupby_column=None, size='1/2', aggregation='sum', title='Distribution of Invoice Amount by Nature of Services'), ChartConfig(chart_id='chart-3', chart_type='bar', x_column='Country', y_column='Invoice Amount', groupby_column=None, size='1/2', aggregation='sum', title='Invoice Amount by Country'), ChartConfig(chart_id='chart-4', chart_type='bar', x_column='Department', y_column='Invoice Amount', groupby_column=None, size='1/2', aggregation='sum', title='Invoice Amount by Department')], layout_grid='2-col', reasoning="This dashboard provides an overview of invoice data, highlighting significant revenue concentration in specific services like Payroll and SAM, and a strong domestic focus in India. However, the analysis is constrained by critical data quality issues, particularly in the 'Invoice Date' column which appears to have invalid values, and high missingness in 'Brand Name' and 'Property Name'. Users should prioritize resolving these data integrity issues before relying on this dashboard for strategic decision-making. The current view allows for segmentation by Company Group, Service, and Country, providing a high-level understanding of revenue distribution and service mix.")
+RESULT DIR
+['__annotations__', '__class__', '__dataclass_fields__', '__dataclass_params__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__match_args__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'charts', 'filters', 'kpis', 'layout_grid', 'reasoning', 'to_dict']
+TO DICT
+{'filters': [{'column': 'Company Group', 'filter_type': 'dropdown', 'label': 'Company Group'}, {'column': 'Service', 'filter_type': 'dropdown', 'label': 'Service'}, {'column': 'Country', 'filter_type': 'dropdown', 'label': 'Country'}], 'kpis': [{'metric': 'Invoice Amount', 'aggregation': 'sum', 'label': 'Total Invoice Amount'}, {'metric': 'Invoice Amount', 'aggregation': 'mean', 'label': 'Average Invoice Amount'}, {'metric': 'Invoice No', 'aggregation': 'count', 'label': 'Total Number of Invoices'}, {'metric': 'Due Days', 'aggregation': 'mean', 'label': 'Average Due Days'}, {'metric': 'Balance Amount', 'aggregation': 'sum', 'label': 'Total Balance Amount'}], 'charts': [{'chart_id': 'chart-0', 'chart_type': 'bar', 'x': 'Service', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-1', 'chart_type': 'bar', 'x': 'Company Group', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-2', 'chart_type': 'pie', 'x': 'Nature of Services', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-3', 'chart_type': 'bar', 'x': 'Country', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-4', 'chart_type': 'bar', 'x': 'Department', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}], 'layout_grid': '2-col', 'reasoning': "This dashboard provides an overview of invoice data, highlighting significant revenue concentration in specific services like Payroll and SAM, and a strong domestic focus in India. However, the analysis is constrained by critical data quality issues, particularly in the 'Invoice Date' column which appears tohave invalid values, and high missingness in 'Brand Name' and 'Property Name'. Users should prioritize resolving these data integrityissues before relying on this dashboard for strategic decision-making. The current view allows for segmentation by Company Group, Service, and Country, providing a high-level understanding of revenue distribution and service mix."}
+RETURNING TO STORE:
+<class 'str'>
+This dashboard provides an overview of invoice data, highlighting significant revenue concentration in specific services like Payrolland SAM, and a strong domestic focus in India. However, the analysis is constrained by critical data quality issues, particularly in the 'Invoice Date' column which appears to have invalid values, and high missingness in 'Brand Name' and 'Property Name'. Users shouldprioritize resolving these data integrity issues before relying on this dashboard for strategic decision-making. The current view allows for segmentation by Company Group, Service, and Country, providing a high-level understanding of revenue distribution and service mix.
+RETURN TYPE: <class 'dict'>
+STORE DATA {'filters': [{'column': 'Company Group', 'filter_type': 'dropdown', 'label': 'Company Group'}, {'column': 'Service', 'filter_type': 'dropdown', 'label': 'Service'}, {'column': 'Country', 'filter_type': 'dropdown', 'label': 'Country'}], 'kpis': [{'metric': 'Invoice Amount', 'aggregation': 'sum', 'label': 'Total Invoice Amount'}, {'metric': 'Invoice Amount', 'aggregation': 'mean', 'label':'Average Invoice Amount'}, {'metric': 'Invoice No', 'aggregation': 'count', 'label': 'Total Number of Invoices'}, {'metric': 'Due Days', 'aggregation': 'mean', 'label': 'Average Due Days'}, {'metric': 'Balance Amount', 'aggregation': 'sum', 'label': 'Total Balance Amount'}], 'charts': [{'chart_id': 'chart-0', 'chart_type': 'bar', 'x': 'Service', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-1', 'chart_type': 'bar', 'x': 'Company Group', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-2', 'chart_type': 'pie', 'x': 'Nature of Services', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-3', 'chart_type': 'bar', 'x': 'Country', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-4', 'chart_type': 'bar', 'x': 'Department', 'y': 'InvoiceAmount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}], 'layout_grid': '2-col', 'reasoning': "This dashboard provides an overview of invoice data, highlighting significant revenue concentration in specific services like Payroll and SAM, and a strong domesticfocus in India. However, the analysis is constrained by critical data quality issues, particularly in the 'Invoice Date' column whichappears to have invalid values, and high missingness in 'Brand Name' and 'Property Name'. Users should prioritize resolving these data integrity issues before relying on this dashboard for strategic decision-making. The current view allows for segmentation by CompanyGroup, Service, and Country, providing a high-level understanding of revenue distribution and service mix."}
