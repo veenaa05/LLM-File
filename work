@@ -1,1 +1,118 @@
+# ============================================================
+# STEP 5 - BUILD DATA-DRIVEN DATASET SUMMARY
+# ============================================================
 
+summary = {
+    "row_count": int(len(df)),
+    "column_count": int(len(df.columns)),
+    "columns": list(df.columns),
+    "column_details": {}
+}
+
+# Use the profiler / confirmed data types as the source of truth.
+# This avoids mistakes such as Invoice Date being interpreted
+# as numeric by pandas.
+
+for col in df.columns:
+
+    # Get profile information if available
+    profile = profiles.get(col, {}) if isinstance(profiles, dict) else {}
+
+    if isinstance(profile, dict):
+        dtype = profile.get("dtype", "categorical")
+    else:
+        dtype = getattr(profile, "dtype", "categorical")
+
+    series = df[col]
+
+    # Basic information for every column
+    col_info = {
+        "dtype": dtype,
+        "missing_count": int(series.isna().sum()),
+        "missing_pct": round(float(series.isna().mean() * 100), 2),
+        "unique_count": int(series.nunique(dropna=True)),
+    }
+
+    # --------------------------------------------------------
+    # NUMERIC COLUMN
+    # --------------------------------------------------------
+    if dtype == "numeric":
+
+        numeric_series = pd.to_numeric(series, errors="coerce").dropna()
+
+        if len(numeric_series) > 0:
+
+            col_info.update({
+                "min": float(numeric_series.min()),
+                "max": float(numeric_series.max()),
+                "mean": round(float(numeric_series.mean()), 2),
+                "median": float(numeric_series.median()),
+                "sum": float(numeric_series.sum()),
+                "zero_pct": round(
+                    float((numeric_series == 0).mean() * 100), 2
+                ),
+                "negative_pct": round(
+                    float((numeric_series < 0).mean() * 100), 2
+                )
+            })
+
+    # --------------------------------------------------------
+    # TEMPORAL COLUMN
+    # --------------------------------------------------------
+    elif dtype == "temporal":
+
+        date_series = pd.to_datetime(
+            series,
+            errors="coerce"
+        ).dropna()
+
+        if len(date_series) > 0:
+
+            col_info.update({
+                "min_date": str(date_series.min().date()),
+                "max_date": str(date_series.max().date()),
+                "date_span_days": int(
+                    (date_series.max() - date_series.min()).days
+                )
+            })
+
+    # --------------------------------------------------------
+    # CATEGORICAL COLUMN
+    # --------------------------------------------------------
+    elif dtype == "categorical":
+
+        # Avoid sending thousands of category values to the LLM.
+        # Only send the top 5.
+        top_values = (
+            series
+            .dropna()
+            .astype(str)
+            .value_counts()
+            .head(5)
+        )
+
+        col_info["top_values"] = [
+            {
+                "value": str(value),
+                "count": int(count),
+                "percentage": round(
+                    float(count / len(series.dropna()) * 100), 2
+                )
+            }
+            for value, count in top_values.items()
+        ]
+
+    summary["column_details"][col] = col_info
+
+
+print("STEP 5 - DATASET SUMMARY CREATED")
+print("ROWS:", summary["row_count"])
+print("COLUMNS:", summary["column_count"])
+
+for col, info in summary["column_details"].items():
+    print(
+        f"{col} -> "
+        f"dtype={info.get('dtype')}, "
+        f"missing={info.get('missing_pct')}%, "
+        f"unique={info.get('unique_count')}"
+    )
