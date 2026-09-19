@@ -1,217 +1,306 @@
-"""LLM-based dataset analysis"""
-import json
-import traceback
-import pandas as pd
-from core.data_profiler import ColumnProfile
-from core.config import DashboardConfig, FilterConfig, KPIConfig, ChartConfig
-from core.schemas import DashboardConfigModel
-from typing import Dict, Optional
-import sys
+"""LLM prompt templates - Big Four consulting-grade prompts"""
 
-class LLMAnalyzer:
-    """Analyze dataset using LLM provider"""
+DATASET_ANALYSIS_PROMPT = """You are a McKinsey-level data analytics consultant. Analyze this dataset comprehensively and generate a professional dashboard configuration with executive insights.
 
-    def __init__(self, provider=None, config=None):
-        self.provider = provider
-        self.config = config
+CONTEXT: {context}
 
-    def analyze(self, df: pd.DataFrame,
-                profiles: Dict[str, ColumnProfile],
-                user_context: str = None) -> DashboardConfig:
-        """Analyze dataset with LLM"""
+COLUMN PROFILES:
+{column_profiles}
 
-        if not self.provider:
-            print("[INFO] No LLM provider configured. Skipping LLM analysis.")
-            return None
+SAMPLE DATA (first 100 rows):
+{sample_data}
 
-        try:
-            # 1. Prepare data
-            profiles_json = self._profiles_to_json(profiles)
-            sample_data = self._sample_to_string(df)
 
-            print("[INFO] Sending data to LLM for analysis...")
+=============================================================================
+CRITICAL SCHEMA VALIDATION RULES
+=============================================================================
 
-            # 2. Call LLM
-            response = self.provider.analyze_dataset(
-                profiles_json,
-                sample_data,
-                user_context,
-                self.config.include_sample_data if self.config else True
-            )
-            print("\n====RAW LLM RESPONSE====")
-            print(response)
-            print("===========================")
+YOU MUST USE ONLY THE COLUMN NAMES PROVIDED IN COLUMN PROFILES.
 
-            if not response or response == "{}":
-                print("[WARN] LLM returned empty response")
-                return None
+STRICT REQUIREMENTS:
 
-            # 3. Parse response
-            config_dict = self.provider.extract_json_response(response)
-            print("\n====CHARTS FROM LLM====")
-            print(config_dict.get("charts", []))
-            print("====================\n")
-            
-            print("\n====CONFIG_DICT====")
-            print(config_dict)
-            print("======================")
+1. NEVER invent columns.
 
-            if not config_dict:
-                print("[WARN] Could not extract JSON from LLM response")
-                return None
+2. Every filter.column must exactly match a column name from COLUMN PROFILES.
 
-            print("[OK] LLM analysis successful")
-            print(f"[INFO] LLM suggested: {len(config_dict.get('filters', []))} filters, {len(config_dict.get('kpis', []))} KPIs, {len(config_dict.get('charts', []))} charts")
+3. Every kpi.metric must exactly match a column name from COLUMN PROFILES.
 
-            # 4. Convert to DashboardConfig with validation
-            return self._dict_to_config(config_dict, df)
-        
-        
-        except Exception as e:
-            print("\n=====FULL TRACEBACK====")
-            traceback.print_exc()
-            print("=========================")
-            return None
-        
-        # except Exception as e:
-        #     print(f"[ERROR] LLM analysis failed: {e}")
-        #     return None
+4. Every chart.x and chart.y must exactly match a column name from COLUMN PROFILES.
 
-    def _profiles_to_json(self, profiles: Dict) -> str:
-        """Convert ColumnProfile dict or plain dict to JSON"""
-        data = {}
-        for name, profile in profiles.items():
-            if isinstance(profile, dict):
-                data[name] = {
-                    'dtype': profile.get('dtype', 'unknown'),
-                    'cardinality': profile.get('cardinality', 0),
-                    'missing_pct': round(profile.get('missing_pct', 0.0), 1),
-                    'range': profile.get('value_range'),
-                    'top_values': (profile.get('top_values') or [])[:5],
-                    'is_temporal': profile.get('is_temporal', False),
-                    'has_outliers': profile.get('has_outliers', False),
-                }
-            else:
-                data[name] = {
-                    'dtype': profile.dtype,
-                    'cardinality': profile.cardinality,
-                    'missing_pct': round(profile.missing_pct, 1),
-                    'range': profile.value_range,
-                    'top_values': profile.top_values[:5],
-                    'is_temporal': profile.is_temporal,
-                    'has_outliers': profile.has_outliers,
-                }
-        return json.dumps(data, indent=2, default=str)
+5. Preserve exact spelling, spaces, punctuation and capitalization.
 
-    def _sample_to_string(self, df: pd.DataFrame) -> str:
-        """Format sample data as string"""
-        return df.head(5).to_string()
+6. Before generating the final JSON, verify that every referenced column exists in COLUMN PROFILES.
 
-    
-    def _dict_to_config(self, config_dict: dict, df: pd.DataFrame = None) -> Optional[DashboardConfig]:
-        """Convert dict to DashboardConfig with validation"""
-        try:
-            import json
-            print("\n====CONFIG_DICT====")
-            print(json.dumps(config_dict, indent=2))
-            print("=======================\n")
-            
-            valid_columns = set(df.columns) if df is not None else set()
+7. If a suitable column does not exist, omit that KPI, filter or chart.
 
-            filters = []
-            if 'filters' in config_dict:
-                for f in config_dict.get('filters', []):
-                    print("FILTER RAW:", f)
-                    col = f.get('column', '')
-                    if not df is None and col not in valid_columns:
-                        print(f"[WARN] Filter column '{col}' not found in dataset, skipping")
-                        continue
-                    filters.append(FilterConfig(
-                        column=col,
-                        filter_type=f.get('filter_type', 'dropdown'),
-                        label=f.get('label', col)
-                    ))
+8. Do NOT create generic business fields such as:
+  - Revenue
+  - Total Revenue
+  - Sales
+  - Costs
+  - Profit
+  - Region
+  - Customer Segment
+  - Product Line
+  - CustomerCount
+  - Date
+  - Order Value
 
-            kpis = []
-            if 'kpis' in config_dict:
-                for k in config_dict.get('kpis', []):
-                    # Handle both string and dict formats
-                    if isinstance(k, str):
-                        metric = k
-                        if not df is None and metric not in valid_columns:
-                            print(f"[WARN] KPI metric '{metric}' not found in dataset, skipping")
-                            continue
-                        kpis.append(KPIConfig(
-                            metric=metric,
-                            aggregation='sum',
-                            label=metric.replace('_', ' ').title()
-                        ))
-                    else:
-                        print("KPI RAW:", k)
-                        metric = k.get('metric', '')
-                        if not df is None and metric not in valid_columns:
-                            print(f"[WARN] KPI metric '{metric}' not found in dataset, skipping")
-                            continue
-                        kpis.append(KPIConfig(
-                            metric=metric,
-                            aggregation=k.get('aggregation', 'sum'),
-                            label=k.get('label', metric.replace('_', ' ').title())
-                        ))
+   UNLESS those exact column names appear in COLUMN PROFILES.
 
-            charts = []
-            if 'charts' in config_dict:
-                for i, c in enumerate(config_dict.get('charts', [])):
-                    print("CHART RAW:", c)
-                    x_col = c.get('x', c.get('x_column', ''))
-                    y_col = c.get('y', c.get('y_column', ''))
+9. The dashboard must adapt dynamically to any uploaded dataset.
 
-                    # Validate columns exist
-                    # if not df is None and (x_col not in valid_columns or y_col not in valid_columns):
-                    #     if x_col not in valid_columns:
-                    #         print(f"[WARN] Chart x_column '{x_col}' not found, skipping chart {i}")
-                    #     if y_col not in valid_columns:
-                    #         print(f"[WARN] Chart y_column '{y_col}' not found, skipping chart {i}")
-                    #     continue
-                    
-                    if df is not None:
-                        if x_col and x_col not in valid_columns:
-                            print(f"[WARN] Chart x_column '{x_col}' not found, skipping chart {i}")
-                            continue
-                        
-                        if y_col and y_col not in valid_columns:
-                            print(f"[WARN] Chart y_column '{y_col}' not found, skipping chart {i}")
-                            continue
+10. The response will be rejected if it references any column that is not present in COLUMN PROFILES.
 
-                    charts.append(ChartConfig(
-                        chart_id=c.get('chart_id', f'chart-{i}'),
-                        chart_type=c.get('type', c.get('chart_type', 'bar')),
-                        x_column=x_col,
-                        y_column=y_col,
-                        size=c.get('size', '1/3'),
-                        aggregation=c.get('aggregation', 'sum'),
-                        title=c.get('title')
-                    ))
+EXAMPLE:
 
-            if not charts:
-                print("[WARN] No valid charts generated after validation")
-            if not kpis:
-                print("[WARN] No valid KPIs generated after validation")
-            if not filters:
-                print("[WARN] No valid filters generated after validation")
-                
-            print("\n====FINAL CONFIG====")
-            print("Filters:", len(filters))
-            print("KPIs:", len(kpis))
-            print("Charts:", len(charts))
-            print("=======================\n")
+If COLUMN PROFILES contains:
 
-            return DashboardConfig(
-                filters=filters,
-                kpis=kpis,
-                charts=charts,
-                layout_grid=config_dict.get('layout_grid', '2-col'),
-                reasoning=config_dict.get('narrative', config_dict.get('reasoning', 'LLM-generated'))
-            )
-        except Exception as e:
-            print(f"[ERROR] Failed to convert LLM response to config: {e}")
-            return None
+- Invoice Amount
+- Invoice Date
+- Country
+
+VALID:
+
+{{
+  "metric": "Invoice Amount"
+}}
+
+{{
+  "x": "Invoice Date",
+  "y": "Invoice Amount"
+}}
+
+INVALID:
+
+{{
+  "metric": "Revenue"
+}}
+
+{{
+  "x": "Region",
+  "y": "Total Revenue"
+}}
+
+
+=============================================================================
+ANALYSIS INSTRUCTIONS - Big Four Standards
+=============================================================================
+
+You are designing an executive dashboard that tells a data story. Think like a management consultant:
+1. What are the 3-4 most important findings? (executive summary)
+2. What trends or patterns emerge? (time-series, growth, seasonality)
+3. What data quality issues exist? (missing data, outliers, reliability)
+4. What actionable insights can we extract? (business implications)
+5. What drill-downs would executives want? (filters for deeper analysis)
+6. What metrics matter most? (KPIs that drive decisions)
+
+DETAILED REQUIREMENTS:
+
+1. **Executive Summary** (CRITICAL for Big Four style):
+   - Identify 3-4 key findings that a CEO would care about
+   - Be specific: "Revenue declined 12% YoY in Q3" not "Sales are down"
+   - Include data quality assessment (e.g., "95% data completeness")
+   - State the overall health of the dataset (Healthy/Caution/Alert)
+
+2. **Filters** (Enable meaningful drill-downs):
+   - Select 2-3 categorical columns with cardinality 5-50
+   - Prioritize only columns that actually exist in COLUMN PROFILES.
+   - Choose the most useful categorical columns available in the dataset.
+   - These should be columns executives naturally ask: "What about if we filter by...?"
+   - Format label as readable: "Region", "Customer Segment", "Product Line"
+
+3. **KPIs** (Key business metrics):
+   - Select only numeric columns that exist in COLUMN PROFILES.
+   - The metric field must exactly match an existing column name.
+   - Recommend AGGREGATION STRATEGY:
+     * sum: Total revenue, total volume, total cost
+     * mean: Average transaction, average rating
+     * count: Number of records, customers, transactions
+     * max: Peak value, highest transaction
+   - Label should be business-friendly: "$Total Revenue" not "sum_of_amount"
+   - Prioritize metrics that answer: "Are we healthy? Growing? Profitable?"
+
+4. **Charts** (Tell the data story - 5-8 charts):
+   - Start with the "so what?" - what insight do you want to convey?
+   - Recommend diverse chart types based on data semantics:
+     * TIME SERIES: Use 'line' or 'area' (shows trends, seasonality)
+     * COMPOSITION: Use 'stacked-bar', 'pie' (shows part-to-whole)
+     * DISTRIBUTION: Use 'box', 'violin', 'histogram' (shows spread, outliers)
+     * COMPARISON: Use 'bar' (top 10, side-by-side comparison)
+     * HIERARCHY: Use 'sunburst', 'treemap' (drill-down structure)
+     * CORRELATION: Use 'scatter', 'heatmap' (relationships)
+     * TRENDS: Use 'cumulative-line' (running totals, growth)
+     * PERFORMANCE: Use 'waterfall' (profit drivers), 'funnel' (conversion)
+   - Advanced types for impactful presentations:
+     * 'waterfall': Perfect for profit/cost breakdowns
+     * 'funnel': Ideal for pipeline/conversion analysis
+     * 'sunburst': Best for hierarchical drill-down
+     * 'treemap': Great for portfolio/market share analysis
+     * 'bubble': Shows 3 dimensions simultaneously
+     * 'gauge': Perfect for target progress metrics
+   - Each chart needs a BUSINESS-FOCUSED title:
+     ✓ "Top 5 Revenue Sources by Region"
+     ✗ "Bar Chart - Amount by Category"
+   - Layout: Use 'full' for key insight, '1/2' for 2-per-row, '1/3' for 3-per-row
+
+5. **Business Narrative** (Why this dashboard design?):
+   - Explain the story: "This dashboard reveals X, highlights Y, enables Z"
+   - Connect to business impact: "Allows quick identification of underperforming regions"
+   - Format numbers professionally: "$2.4M" not "$2400000"
+
+6. **Data Quality Assessment**:
+   - Report missing data % by column
+   - Flag any outliers or data quality concerns
+   - Assess overall reliability: High/Medium/Low
+   - Recommend caution areas (e.g., "2023 data incomplete")
+
+FORMATTING REQUIREMENTS:
+
+- Numbers: Use abbreviated scale ($2.4M, 45.2%, 1.2K)
+- Dates: Use "YYYY-MM-DD" format in descriptions
+- Labels: PascalCase for readable titles ("Total Revenue", not "total_revenue")
+- Return ONLY valid JSON with no markdown, no explanations, no code blocks, no wrapping text
+
+=============================================================================
+EXPECTED JSON OUTPUT FORMAT
+=============================================================================
+
+{{
+  "executive_summary": {{
+    "key_findings": [
+      "Key insight 1 (be specific with metrics)",
+      "Key insight 2 (quantified impact)",
+      "Key insight 3 (business implication)"
+    ],
+    "data_quality_score": 0.92,
+    "overall_health": "Healthy",
+    "missing_data_pct": 2.1,
+    "reliability": "High"
+  }},
+  "trends": [
+    {{"column": "existing_numeric_column", "direction": "increasing", "growth_rate": 0.12}},
+    {{"column": "another_existing_numeric_column", "direction": "stable", "growth_rate": 0.0}}
+  ],
+  "data_quality": {{
+    "missing_values": {{"Column1": 0.5, "Column2": 1.2}},
+    "outliers_detected": false,
+    "data_completeness": 0.98,
+    "recommendation": "Data quality is high; proceed with confidence"
+  }},
+  "insights": [
+    "Business insight 1 that explains what the data means",
+    "Business insight 2 with actionable implications"
+  ],
+  "recommendations": [
+    "Recommended action or focus area 1",
+    "Recommended action or focus area 2"
+  ],
+  "filters": [
+    {{"column": "col_name", "filter_type": "dropdown", "label": "Display Name"}}
+  ],
+  "kpis": [
+    {{"metric": "col_name", "aggregation": "sum|mean|count|max", "label": "Professional Label"}}
+  ],
+  "charts": [
+    {{
+      "chart_id": "chart-0",
+      "type": "bar|line|waterfall|funnel|sunburst|treemap|violin|bubble|gauge|gantt|sankey|2d-bar|cumulative-line|stacked-bar|pie|scatter|box|histogram",
+      "x": "x_column",
+      "y": "y_column",
+      "title": "Business-focused title explaining the insight",
+      "size": "1/3|1/2|full"
+    }}
+  ],
+  "layout_grid": "2-col|3-col",
+  "narrative": "Executive summary of why this dashboard design tells the data story"
+}}
+
+CRITICAL:
+Return ONLY valid JSON.
+Do not explain your answer.
+Do not add markdown.
+Do not add code fences.
+Do not add introductory text.
+Do not add commentary.
+The first character of the response must be {{
+The last character of the response must be}}
+"""
+
+
+def build_big_four_prompt(col_summary: str, sample_str: str, n_rows: int,
+                           n_cols: int, n_kpis: int, n_filters: int,
+                           objective: str = '') -> str:
+    """Build the Big Four analyst prompt, optionally scoped to a user objective."""
+    objective = (objective or '').strip()[:500].strip()
+
+    objective_section = ''
+    if objective:
+        objective_section = (
+            f'USER OBJECTIVE: {objective}\n\n'
+            f'Use this objective to prioritise chart types, KPI selection, and the strategic narrative.\n'
+            f'Focus your recommendations on answering: "{objective}"\n\n'
+        )
+
+    return f"""{objective_section}You are a Senior Data Analytics Partner at McKinsey & Company with 15 years of experience turning raw data into C-suite insights. A client has just shared their dataset and needs your expert analysis.
+
+DATASET OVERVIEW:
+- Rows: {n_rows:,}  |  Columns: {n_cols}
+- User has pre-selected {n_kpis} KPIs and {n_filters} filters
+
+COLUMN PROFILES (name [type] cardinality missing% top_values):
+{col_summary}
+
+SAMPLE DATA (5 rows):
+{sample_str}
+
+INSTRUCTIONS:
+As a Big Four senior analyst, provide a rigorous, specific, and actionable diagnostic. Do NOT be generic.
+
+1. EXECUTIVE FINDINGS (3-4 bullet points)
+   - Start each with a quantified statement: "X% of...", "Top 3... account for Y%", "Critical gap in..."
+   - Flag any data quality red flags (high cardinality IDs, high missing%, sparse columns)
+   - State what business question each column can answer
+
+2. KPI RECOMMENDATIONS (3-5 metrics)
+   - For each: column name, aggregation (sum/mean/count/max), business label, and WHY it matters
+   - Focus on metrics that drive operational or financial decisions
+
+3. CHART RECOMMENDATIONS (5-7 charts)
+   - For each chart: type, x-column, y-column, business title, and 1-line analytical rationale
+   - Prioritise: distribution analysis (bar/pie), trend decomposition (line if temporal),
+     concentration analysis (treemap/funnel), outlier detection (box plot),
+     cross-dimensional analysis (heatmap if multiple numerics)
+   - Be specific about which columns to use and what insight the chart reveals
+
+4. FILTER RECOMMENDATIONS (2-3 filters)
+   - Identify the 2-3 categorical columns that segment the data most meaningfully for drill-down
+
+5. STRATEGIC NARRATIVE (2-3 sentences)
+   - What story does this data tell? What should leadership focus on first?
+
+Return ONLY valid JSON - no markdown, no explanation text:
+
+{{
+  "executive_summary": {{
+    "key_findings": [
+      "Quantified finding 1 — e.g. Top 3 categories account for 78% of total volume",
+      "Quantified finding 2 — e.g. 23% of records show incomplete data in 4 key fields",
+      "Quantified finding 3 — e.g. Revenue concentration risk: single vendor drives 45% of spend"
+    ],
+    "narrative": "2-3 sentence Big Four analyst narrative. What does this data tell leadership? What should they focus on first? Frame it as a Senior Partner presenting to the C-suite.",
+    "risk_flags": ["Risk or data quality issue 1", "Risk or data quality issue 2"],
+    "priority_action": "Single most important action leadership should take based on this data"
+  }},
+  "data_quality_score": 0.0,
+  "kpis": [
+    {{"column": "col", "aggregation": "sum", "label": "Business Label", "rationale": "why it matters"}}
+  ],
+  "charts": [
+    {{"type": "bar|pie|line|histogram|box|heatmap|funnel|treemap|scatter", "x": "col", "y": "col", "title": "Business Title", "rationale": "what insight this reveals"}}
+  ],
+  "filters": [
+    {{"column": "col", "label": "Display Name", "rationale": "segmentation value"}}
+  ],
+  "narrative": "2-3 sentence strategic summary for leadership"
+}}"""
