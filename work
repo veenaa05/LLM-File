@@ -1,118 +1,669 @@
-# ============================================================
-# STEP 5 - BUILD DATA-DRIVEN DATASET SUMMARY
-# ============================================================
+AI CALLBACK FIRED
+N_CLICKS: 1
+TIME: 1789831663.561015
+================================================================================
+STEP 1- CALLBACK STARTED
+DF_JSON IS NONE: False
+DF_JSON LENGTH: 1930659
+STEP 3- BEFORE READ_JSON
+DF_JSON TYPE: <class 'str'>
+DF_JSON PREVIEW: {"columns":["Client Name","Marsha","Property Name","Invoice No","Invoice Date","Due Days","Revenue Head","Nature of Services","Service","Invoice Amount","Below 30 Days","Overdue 30 - 60 Days","Overdue
+STEP 4- AFTER READ_JSON
+(4205, 31)
+STEP 5 - DATASET SUMMARY CREATED
+ROWS: 4205
+COLUMNS: 31
+Client Name -> dtype=categorical, missing=0.17%, unique=1202
+Marsha -> dtype=categorical, missing=57.62%, unique=555
+Property Name -> dtype=categorical, missing=77.31%, unique=451
+Invoice No -> dtype=categorical, missing=0.17%, unique=4198
+Invoice Date -> dtype=temporal, missing=0.17%, unique=528
+Due Days -> dtype=numeric, missing=0.17%, unique=528
+Revenue Head -> dtype=categorical, missing=8.25%, unique=26
+Nature of Services -> dtype=categorical, missing=8.25%, unique=6
+Service -> dtype=categorical, missing=0.17%, unique=48
+Invoice Amount -> dtype=numeric, missing=0.1%, unique=2017
+Below 30 Days -> dtype=numeric, missing=0.14%, unique=843
+Overdue 30 - 60 Days -> dtype=numeric, missing=0.17%, unique=440
+Overdue 60 - 180 Days -> dtype=numeric, missing=0.17%, unique=502
+Overdue Above 180 Days -> dtype=numeric, missing=0.17%, unique=249
+Above 1 year -> dtype=numeric, missing=0.17%, unique=292
+Balance Collection Amount -> dtype=numeric, missing=0.17%, unique=401
+Credit Note Issued -> dtype=numeric, missing=0.17%, unique=4
+Balance Amount -> dtype=numeric, missing=0.17%, unique=2376
+Unnamed: 18 -> dtype=numeric, missing=79.5%, unique=173
+Forex Balance Amount -> dtype=numeric, missing=0.17%, unique=209
+Particulars -> dtype=categorical, missing=0.17%, unique=3881
+Manager -> dtype=categorical, missing=0.17%, unique=79
+Partner -> dtype=categorical, missing=0.17%, unique=10
+Department -> dtype=categorical, missing=0.17%, unique=8
+Company Group -> dtype=categorical, missing=0.17%, unique=5
+Group -> dtype=categorical, missing=0.17%, unique=275
+Contact Person Name -> dtype=categorical, missing=8.7%, unique=1194
+Brand Name -> dtype=categorical, missing=98.12%, unique=19
+Project MID -> dtype=categorical, missing=10.15%, unique=1881
+Country -> dtype=categorical, missing=0.17%, unique=43
+GST NO -> dtype=numeric, missing=0.17%, unique=569
+STEP 6 - BEFORE ANALYZE
+[INFO] Sending data to LLM for analysis...
 
-summary = {
-    "row_count": int(len(df)),
-    "column_count": int(len(df.columns)),
-    "columns": list(df.columns),
-    "column_details": {}
-}
+===== PROMPT =====
+You are a McKinsey-level data analytics consultant. Analyze this dataset comprehensively and generate a professional dashboard configuration with executive insights.
 
-# Use the profiler / confirmed data types as the source of truth.
-# This avoids mistakes such as Invoice Date being interpreted
-# as numeric by pandas.
+CONTEXT: No additional context provided
 
-for col in df.columns:
+COLUMN PROFILES:
+{
+  "Client Name": {
+    "dtype": "categorical",
+    "cardinality": 1202,
+    "missing_pct": 0.2,
+    "range": null,
+    "top_values": [
+      "GRASIM INDS LTD",
+      "DUET INDIA HOTELS (CHENNAI OMR) PVT. LTD.",
+      "GRASIM INDUSTRIES LIMITED",
+      "PALLAZZIO HOTELS & LEISURE LTD.",
+      "GRASIM INDUSTRIES LIMITED, STAPLE FIBRE DIVISION, NAGDA"
+    ],
+    "is_temporal": false,
+    "has_outliers": false
+  },
+  "Marsha": {
+    "dtype": "categorical",
+    "cardinality": 555,
+    "missing_pct": 57.6,
+    "range": null,
+    "top_values": [
+      "MAAFO",
+      "BOMXR",
+      "IDRSI",
+      "DEDFI",
+      "."
+    ],
+    "is_temporal": false,
+    "has_outliers": false
+  },
+  "Property Name": {
+    "dtype": "categorical",
+    "cardinality": 451,
+    "missing_pct": 77.3,
+    "range": null,
+    "top_values": [
+      "Four Points by Sheraton Chennai OMR",
+      "The St. Regis Mumbai",
+      "Fairfield By Marriott Dehradun",
+      "FAIRFIELD BY MARRIOTT JAIPUR TONK ROAD",
+      "COURTYARD BY MARRIOTT RANCHI"
+    ],
+    "is_temporal": false,
+    "has_outliers": false
+  },
+  "Invoice No": {
+    "dtype": "categorical",
+    "cardinality": 4198,
+    "missing_pct": 0.2,
+    "range": null,
+    "top_values": [
+      "OSO2526-27011449",
+      "OSO2526-27040019",
+      "OSO2526-27040020",
+      "OSO2526-27011602",
+      "OSO2526-27020476"
+    ],
+    "is_temporal": false,
+    "has_outliers": false
+  },
+  "Invoice Date": {
+    "dtype": "temporal",
+    "cardinality": 528,
+    "missing_pct": 0.2,
+    "range": null,
+    "top_values": [
+      "2026-02-05",
+      "2026-03-06",
+      "2026-03-09",
+      "2026-03-05",
+      "2026-02-04"
+    ],
+    "is_temporal": true,
+    "has_outliers": false
+  },
+  "Due Days": {
+    "dtype": "numeric",
+    "cardinality": 528,
+    "missing_pct": 0.2,
+    "range": null,
+    "top_values": [
+      "39.0",
+      "10.0",
+      "7.0",
+      "11.0",
+      "40.0"
+    ],
+    "is_temporal": false,
+    "has_outliers": false
+  },
+  "Revenue Head": {
+    "dtype": "categorical",
+    "cardinality": 26,
+    "missing_pct": 8.3,
+    "range": null,
+    "top_values": [
+      "Payroll Management",
+      "SAM",
+      "DMS",
+      "HRMS",
+      "Recon Tool"
+    ],
+    "is_temporal": false,
+    "has_outliers": false
+  },
+  "Nature of Services": {
+    "dtype": "categorical",
+    "cardinality": 6,
+    "missing_pct": 8.3,
+    "range": null,
+    "top_values": [
+      "Local",
+      "Export",
+      "Exempt",
+      "ON ACCOUNT",
+      "LOCAL"
+    ],
+    "is_temporal": false,
+    "has_outliers": false
+  },
+  "Service": {
+    "dtype": "categorical",
+    "cardinality": 48,
+    "missing_pct": 0.2,
+    "range": null,
+    "top_values": [
+      "PAYROLL",
+      "GREEN SAM",
+      "HRMS",
+      "ON ACCOUNT",
+      "PROJECT TREE"
+    ],
+    "is_temporal"
+==================
 
-    # Get profile information if available
-    profile = profiles.get(col, {}) if isinstance(profiles, dict) else {}
+[INFO] Base URL : https://litellm.osourceglobal.com:/v1
+[INFO] Model    : local-qwen3.6-nvfp4-vllm
+[DEBUG] Response Status: 200
 
-    if isinstance(profile, dict):
-        dtype = profile.get("dtype", "categorical")
-    else:
-        dtype = getattr(profile, "dtype", "categorical")
-
-    series = df[col]
-
-    # Basic information for every column
-    col_info = {
-        "dtype": dtype,
-        "missing_count": int(series.isna().sum()),
-        "missing_pct": round(float(series.isna().mean() * 100), 2),
-        "unique_count": int(series.nunique(dropna=True)),
+===== LLM RESPONSE =====
+{
+  "executive_summary": {
+    "key_findings": [
+      "Significant Accounts Receivable (AR) aging: A substantial portion of the portfolio is overdue, with notable balances in the 'Overdue 60-180 Days' and 'Overdue Above 180 Days' buckets, indicating potential liquidity risks.",
+      "High concentration in key client groups: Marriott and Grasim groups dominate the portfolio, creating concentration risk; diversification strategies should be evaluated.",
+      "Service mix heavily skewed towards Software/HRMS: The majority of revenue stems from HRMS, DMS, and Payroll services, with 'Local' and 'Export' nature of services driving volume.",
+      "Data integrity concerns: Critical fields like 'Brand Name' (98.1% missing) and 'Property Name' (77.3% missing) have high missingness, limiting granular property-level analysis."
+    ],
+    "data_quality_score": 0.75,
+    "overall_health": "Caution",
+    "missing_data_pct": 12.4,
+    "reliability": "Medium"
+  },
+  "trends": [
+    {
+      "column": "Invoice Date",
+      "direction": "increasing",
+      "growth_rate": 0.05
     }
+  ],
+  "data_quality": {
+    "missing_values": {
+      "Brand Name": 98.1,
+      "Property Name": 77.3,
+      "Unnamed: 18": 79.5,
+      "Marsha": 57.6,
+      "Contact Person Name": 8.7,
+      "Revenue Head": 8.3,
+      "Nature of Services": 8.3,
+      "Project MID": 10.2
+    },
+    "outliers_detected": false,
+    "data_completeness": 0.876,
+    "recommendation": "Investigate the source of missing 'Brand Name' and 'Property Name' data. Cleanse 'Marsha' and 'Unnamed: 18' columns as they may represent redundant or erroneous data entry. Validate 'Balance Collection Amount' negative values for potential dataentry errors or legitimate credits."
+  },
+  "insights": [
+    "The presence of negative values in 'Balance Collection Amount' and 'Credit Note Issued' suggests active credit management but also indicates potential disputes or overpayments that need reconciliation.",
+    "High overdue amounts in the 60-180 day and above 180 day buckets signal a need for immediate collection efforts on specific client accounts, particularly those with high 'Balance Amount' remaining.",
+    "The 'Due Days' column shows variability (e.g., 340 days for some entries), which may indicate non-standard payment terms or severely delinquent accounts requiring special attention."
+  ],
+  "recommendations": [
+    "Implement an automated aging report focused on 'Overdue 60 - 180 Days' and 'Overdue Above 180 Days' to prioritize collection efforts.",
+    "Conduct a client-level review of the top 5 clients by 'Balance Amount' to assess creditworthiness and negotiate payment plans for overdue balances.",
+    "Cleanse the 'Brand Name' and 'Property Name' fields to enable more granular performance analysis by brand or property type.",
+    "Review 'Nature of Services' to ensure tax compliance and proper classification of 'Export' vs 'Local' services, especially giventhe international client base (Canada, China, etc.)."
+  ],
+  "filters": [
+    {
+      "column": "Company Group",
+      "filter_type": "dropdown",
+      "label": "Company Group"
+    },
+    {
+      "column": "Service",
+      "filter_type": "dropdown",
+      "label": "Service"
+    },
+    {
+      "column": "Country",
+      "filter_type": "dropdown",
+      "label": "Country"
+    }
+  ],
+  "kpis": [
+    {
+      "metric": "Invoice Amount",
+      "aggregation": "sum",
+      "label": "Total Invoiced Revenue"
+    },
+    {
+      "metric": "Balance Amount",
+      "aggregation": "sum",
+      "label": "Total Outstanding Balance"
+    },
+    {
+      "metric": "Overdue 60 - 180 Days",
+      "aggregation": "sum",
+      "label": "Overdue Balance (60-180 Days)"
+    },
+    {
+      "metric": "Overdue Above 180 Days",
+      "aggregation": "sum",
+      "label": "Overdue Balance (>180 Days)"
+    },
+    {
+      "metric": "Invoice No",
+      "aggregation": "count",
+      "label": "Total Invoices"
+    }
+  ],
+  "charts": [
+    {
+      "chart_id": "chart-0",
+      "type": "waterfall",
+      "x": "Nature of Services",
+      "y": "Invoice Amount",
+      "title": "Revenue Contribution by Nature of Services",
+      "size": "full"
+    },
+    {
+      "chart_id": "chart-1",
+      "type": "stacked-bar",
+      "x": "Company Group",
+      "y": "Balance Amount",
+      "title": "Outstanding Balance by Company Group",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-2",
+      "type": "bar",
+      "x": "Service",
+      "y": "Invoice Amount",
+      "title": "Top Services by Invoiced Revenue",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-3",
+      "type": "pie",
+      "x": "Overdue 30 - 60 Days",
+      "y": "Overdue 60 - 180 Days",
+      "title": "AR Aging Distribution (30-180+ Days)",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-4",
+      "type": "line",
+      "x": "Invoice Date",
+      "y": "Invoice Amount",
+      "title": "Monthly Invoicing Trend",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-5",
+      "type": "bar",
+========================
 
-    # --------------------------------------------------------
-    # NUMERIC COLUMN
-    # --------------------------------------------------------
-    if dtype == "numeric":
 
-        numeric_series = pd.to_numeric(series, errors="coerce").dropna()
+====RAW LLM RESPONSE====
+{
+  "executive_summary": {
+    "key_findings": [
+      "Significant Accounts Receivable (AR) aging: A substantial portion of the portfolio is overdue, with notable balances in the 'Overdue 60-180 Days' and 'Overdue Above 180 Days' buckets, indicating potential liquidity risks.",
+      "High concentration in key client groups: Marriott and Grasim groups dominate the portfolio, creating concentration risk; diversification strategies should be evaluated.",
+      "Service mix heavily skewed towards Software/HRMS: The majority of revenue stems from HRMS, DMS, and Payroll services, with 'Local' and 'Export' nature of services driving volume.",
+      "Data integrity concerns: Critical fields like 'Brand Name' (98.1% missing) and 'Property Name' (77.3% missing) have high missingness, limiting granular property-level analysis."
+    ],
+    "data_quality_score": 0.75,
+    "overall_health": "Caution",
+    "missing_data_pct": 12.4,
+    "reliability": "Medium"
+  },
+  "trends": [
+    {
+      "column": "Invoice Date",
+      "direction": "increasing",
+      "growth_rate": 0.05
+    }
+  ],
+  "data_quality": {
+    "missing_values": {
+      "Brand Name": 98.1,
+      "Property Name": 77.3,
+      "Unnamed: 18": 79.5,
+      "Marsha": 57.6,
+      "Contact Person Name": 8.7,
+      "Revenue Head": 8.3,
+      "Nature of Services": 8.3,
+      "Project MID": 10.2
+    },
+    "outliers_detected": false,
+    "data_completeness": 0.876,
+    "recommendation": "Investigate the source of missing 'Brand Name' and 'Property Name' data. Cleanse 'Marsha' and 'Unnamed: 18' columns as they may represent redundant or erroneous data entry. Validate 'Balance Collection Amount' negative values for potential dataentry errors or legitimate credits."
+  },
+  "insights": [
+    "The presence of negative values in 'Balance Collection Amount' and 'Credit Note Issued' suggests active credit management but also indicates potential disputes or overpayments that need reconciliation.",
+    "High overdue amounts in the 60-180 day and above 180 day buckets signal a need for immediate collection efforts on specific client accounts, particularly those with high 'Balance Amount' remaining.",
+    "The 'Due Days' column shows variability (e.g., 340 days for some entries), which may indicate non-standard payment terms or severely delinquent accounts requiring special attention."
+  ],
+  "recommendations": [
+    "Implement an automated aging report focused on 'Overdue 60 - 180 Days' and 'Overdue Above 180 Days' to prioritize collection efforts.",
+    "Conduct a client-level review of the top 5 clients by 'Balance Amount' to assess creditworthiness and negotiate payment plans for overdue balances.",
+    "Cleanse the 'Brand Name' and 'Property Name' fields to enable more granular performance analysis by brand or property type.",
+    "Review 'Nature of Services' to ensure tax compliance and proper classification of 'Export' vs 'Local' services, especially giventhe international client base (Canada, China, etc.)."
+  ],
+  "filters": [
+    {
+      "column": "Company Group",
+      "filter_type": "dropdown",
+      "label": "Company Group"
+    },
+    {
+      "column": "Service",
+      "filter_type": "dropdown",
+      "label": "Service"
+    },
+    {
+      "column": "Country",
+      "filter_type": "dropdown",
+      "label": "Country"
+    }
+  ],
+  "kpis": [
+    {
+      "metric": "Invoice Amount",
+      "aggregation": "sum",
+      "label": "Total Invoiced Revenue"
+    },
+    {
+      "metric": "Balance Amount",
+      "aggregation": "sum",
+      "label": "Total Outstanding Balance"
+    },
+    {
+      "metric": "Overdue 60 - 180 Days",
+      "aggregation": "sum",
+      "label": "Overdue Balance (60-180 Days)"
+    },
+    {
+      "metric": "Overdue Above 180 Days",
+      "aggregation": "sum",
+      "label": "Overdue Balance (>180 Days)"
+    },
+    {
+      "metric": "Invoice No",
+      "aggregation": "count",
+      "label": "Total Invoices"
+    }
+  ],
+  "charts": [
+    {
+      "chart_id": "chart-0",
+      "type": "waterfall",
+      "x": "Nature of Services",
+      "y": "Invoice Amount",
+      "title": "Revenue Contribution by Nature of Services",
+      "size": "full"
+    },
+    {
+      "chart_id": "chart-1",
+      "type": "stacked-bar",
+      "x": "Company Group",
+      "y": "Balance Amount",
+      "title": "Outstanding Balance by Company Group",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-2",
+      "type": "bar",
+      "x": "Service",
+      "y": "Invoice Amount",
+      "title": "Top Services by Invoiced Revenue",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-3",
+      "type": "pie",
+      "x": "Overdue 30 - 60 Days",
+      "y": "Overdue 60 - 180 Days",
+      "title": "AR Aging Distribution (30-180+ Days)",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-4",
+      "type": "line",
+      "x": "Invoice Date",
+      "y": "Invoice Amount",
+      "title": "Monthly Invoicing Trend",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-5",
+      "type": "bar",
+      "x": "Country",
+      "y": "Invoice Amount",
+      "title": "Revenue by Country",
+      "size": "1/2"
+    }
+  ],
+  "layout_grid": "2-col",
+  "narrative": "This dashboard provides a comprehensive view of the company's financial health, focusing on revenue recognition and accounts receivable management. By highlighting the aging of receivables and concentration of risk within key client groups, it enablesexecutives to identify immediate collection opportunities and assess credit risk. The inclusion of service-level and geographic breakdowns allows for strategic decisions regarding resource allocation and market focus. Data quality warnings regarding missing brand andproperty names suggest that while high-level insights are robust, granular operational analysis requires data cleansing."
+}
+===========================
 
-        if len(numeric_series) > 0:
-
-            col_info.update({
-                "min": float(numeric_series.min()),
-                "max": float(numeric_series.max()),
-                "mean": round(float(numeric_series.mean()), 2),
-                "median": float(numeric_series.median()),
-                "sum": float(numeric_series.sum()),
-                "zero_pct": round(
-                    float((numeric_series == 0).mean() * 100), 2
-                ),
-                "negative_pct": round(
-                    float((numeric_series < 0).mean() * 100), 2
-                )
-            })
-
-    # --------------------------------------------------------
-    # TEMPORAL COLUMN
-    # --------------------------------------------------------
-    elif dtype == "temporal":
-
-        date_series = pd.to_datetime(
-            series,
-            errors="coerce"
-        ).dropna()
-
-        if len(date_series) > 0:
-
-            col_info.update({
-                "min_date": str(date_series.min().date()),
-                "max_date": str(date_series.max().date()),
-                "date_span_days": int(
-                    (date_series.max() - date_series.min()).days
-                )
-            })
-
-    # --------------------------------------------------------
-    # CATEGORICAL COLUMN
-    # --------------------------------------------------------
-    elif dtype == "categorical":
-
-        # Avoid sending thousands of category values to the LLM.
-        # Only send the top 5.
-        top_values = (
-            series
-            .dropna()
-            .astype(str)
-            .value_counts()
-            .head(5)
-        )
-
-        col_info["top_values"] = [
-            {
-                "value": str(value),
-                "count": int(count),
-                "percentage": round(
-                    float(count / len(series.dropna()) * 100), 2
-                )
-            }
-            for value, count in top_values.items()
-        ]
-
-    summary["column_details"][col] = col_info
+====CHARTS FROM LLM====
+[{'chart_id': 'chart-0', 'type': 'waterfall', 'x': 'Nature of Services', 'y': 'Invoice Amount', 'title': 'Revenue Contribution by Nature of Services', 'size': 'full'}, {'chart_id': 'chart-1', 'type': 'stacked-bar', 'x': 'Company Group', 'y': 'Balance Amount', 'title': 'Outstanding Balance by Company Group', 'size': '1/2'}, {'chart_id': 'chart-2', 'type': 'bar', 'x': 'Service', 'y': 'Invoice Amount', 'title': 'Top Services by Invoiced Revenue', 'size': '1/2'}, {'chart_id': 'chart-3', 'type': 'pie', 'x': 'Overdue 30 - 60 Days', 'y': 'Overdue 60 - 180 Days', 'title': 'AR Aging Distribution (30-180+ Days)', 'size': '1/2'}, {'chart_id': 'chart-4', 'type': 'line', 'x': 'Invoice Date', 'y': 'Invoice Amount', 'title': 'Monthly Invoicing Trend', 'size': '1/2'}, {'chart_id': 'chart-5', 'type': 'bar', 'x': 'Country', 'y': 'Invoice Amount', 'title': 'Revenue by Country', 'size': '1/2'}]
+====================
 
 
-print("STEP 5 - DATASET SUMMARY CREATED")
-print("ROWS:", summary["row_count"])
-print("COLUMNS:", summary["column_count"])
+====CONFIG_DICT====
+{'executive_summary': {'key_findings': ["Significant Accounts Receivable (AR) aging: A substantial portion of the portfolio is overdue, with notable balances in the 'Overdue 60-180 Days' and 'Overdue Above 180 Days' buckets, indicating potential liquidity risks.", 'High concentration in key client groups: Marriott and Grasim groups dominate the portfolio, creating concentration risk; diversification strategies should be evaluated.', "Service mix heavily skewed towards Software/HRMS: The majority of revenue stems from HRMS, DMS, and Payroll services, with 'Local' and 'Export' nature of services driving volume.", "Data integrity concerns: Critical fields like 'Brand Name' (98.1% missing) and 'Property Name' (77.3% missing) have high missingness, limiting granular property-level analysis."], 'data_quality_score': 0.75, 'overall_health': 'Caution', 'missing_data_pct': 12.4, 'reliability': 'Medium'}, 'trends': [{'column': 'Invoice Date', 'direction': 'increasing', 'growth_rate': 0.05}], 'data_quality': {'missing_values': {'Brand Name': 98.1, 'Property Name': 77.3, 'Unnamed: 18': 79.5, 'Marsha': 57.6, 'Contact Person Name': 8.7, 'Revenue Head': 8.3, 'Nature of Services': 8.3, 'Project MID': 10.2}, 'outliers_detected': False, 'data_completeness': 0.876, 'recommendation': "Investigate the source of missing 'Brand Name' and 'Property Name' data. Cleanse 'Marsha' and 'Unnamed: 18' columns as they may represent redundant or erroneous data entry. Validate 'Balance Collection Amount' negative values for potential data entry errors or legitimate credits."}, 'insights': ["The presence of negative values in 'Balance Collection Amount' and 'Credit Note Issued' suggests active credit management but also indicates potential disputes or overpayments that need reconciliation.", "High overdue amounts in the 60-180 day and above 180 day buckets signal a need for immediate collection efforts on specific client accounts, particularly those with high 'Balance Amount' remaining.", "The 'Due Days' column shows variability (e.g., 340 days for some entries), which may indicate non-standard payment terms or severely delinquent accounts requiring special attention."], 'recommendations': ["Implement an automated aging report focused on 'Overdue 60 - 180 Days' and 'Overdue Above 180 Days' to prioritize collection efforts.", "Conduct a client-level review of the top 5 clients by 'Balance Amount' to assess creditworthiness and negotiate payment plans for overdue balances.", "Cleanse the 'Brand Name' and 'Property Name' fields to enablemore granular performance analysis by brand or property type.", "Review 'Nature of Services' to ensure tax compliance and proper classification of 'Export' vs 'Local' services, especially given the international client base (Canada, China, etc.)."], 'filters': [{'column': 'Company Group', 'filter_type': 'dropdown', 'label': 'Company Group'}, {'column': 'Service', 'filter_type': 'dropdown', 'label':'Service'}, {'column': 'Country', 'filter_type': 'dropdown', 'label': 'Country'}], 'kpis': [{'metric': 'Invoice Amount', 'aggregation': 'sum', 'label': 'Total Invoiced Revenue'}, {'metric': 'Balance Amount', 'aggregation': 'sum', 'label': 'Total Outstanding Balance'}, {'metric': 'Overdue 60 - 180 Days', 'aggregation': 'sum', 'label': 'Overdue Balance (60-180 Days)'}, {'metric': 'Overdue Above 180 Days', 'aggregation': 'sum', 'label': 'Overdue Balance (>180 Days)'}, {'metric': 'Invoice No', 'aggregation': 'count', 'label': 'Total Invoices'}], 'charts': [{'chart_id': 'chart-0', 'type': 'waterfall', 'x': 'Nature of Services', 'y': 'Invoice Amount', 'title': 'Revenue Contribution by Nature of Services', 'size': 'full'}, {'chart_id': 'chart-1', 'type': 'stacked-bar', 'x': 'Company Group', 'y': 'Balance Amount', 'title': 'Outstanding Balance by Company Group', 'size': '1/2'}, {'chart_id': 'chart-2', 'type': 'bar', 'x': 'Service','y': 'Invoice Amount', 'title': 'Top Services by Invoiced Revenue', 'size': '1/2'}, {'chart_id': 'chart-3', 'type': 'pie', 'x': 'Overdue 30 - 60 Days', 'y': 'Overdue 60 - 180 Days', 'title': 'AR Aging Distribution (30-180+ Days)', 'size': '1/2'}, {'chart_id': 'chart-4', 'type': 'line', 'x': 'Invoice Date', 'y': 'Invoice Amount', 'title': 'Monthly Invoicing Trend', 'size': '1/2'}, {'chart_id': 'chart-5', 'type': 'bar', 'x': 'Country', 'y': 'Invoice Amount', 'title': 'Revenue by Country', 'size': '1/2'}], 'layout_grid': '2-col', 'narrative': "This dashboard provides a comprehensive view of the company's financial health, focusing on revenue recognition and accounts receivable management. By highlighting the aging of receivables and concentration of risk within key client groups, it enables executives to identify immediate collection opportunities and assess credit risk. The inclusion of service-level and geographic breakdownsallows for strategic decisions regarding resource allocation and market focus. Data quality warnings regarding missing brand and property names suggest that while high-level insights are robust, granular operational analysis requires data cleansing."}
+======================
+[OK] LLM analysis successful
+[INFO] LLM suggested: 3 filters, 5 KPIs, 6 charts
 
-for col, info in summary["column_details"].items():
-    print(
-        f"{col} -> "
-        f"dtype={info.get('dtype')}, "
-        f"missing={info.get('missing_pct')}%, "
-        f"unique={info.get('unique_count')}"
-    )
+====CONFIG_DICT====
+{
+  "executive_summary": {
+    "key_findings": [
+      "Significant Accounts Receivable (AR) aging: A substantial portion of the portfolio is overdue, with notable balances in the 'Overdue 60-180 Days' and 'Overdue Above 180 Days' buckets, indicating potential liquidity risks.",
+      "High concentration in key client groups: Marriott and Grasim groups dominate the portfolio, creating concentration risk; diversification strategies should be evaluated.",
+      "Service mix heavily skewed towards Software/HRMS: The majority of revenue stems from HRMS, DMS, and Payroll services, with 'Local' and 'Export' nature of services driving volume.",
+      "Data integrity concerns: Critical fields like 'Brand Name' (98.1% missing) and 'Property Name' (77.3% missing) have high missingness, limiting granular property-level analysis."
+    ],
+    "data_quality_score": 0.75,
+    "overall_health": "Caution",
+    "missing_data_pct": 12.4,
+    "reliability": "Medium"
+  },
+  "trends": [
+    {
+      "column": "Invoice Date",
+      "direction": "increasing",
+      "growth_rate": 0.05
+    }
+  ],
+  "data_quality": {
+    "missing_values": {
+      "Brand Name": 98.1,
+      "Property Name": 77.3,
+      "Unnamed: 18": 79.5,
+      "Marsha": 57.6,
+      "Contact Person Name": 8.7,
+      "Revenue Head": 8.3,
+      "Nature of Services": 8.3,
+      "Project MID": 10.2
+    },
+    "outliers_detected": false,
+    "data_completeness": 0.876,
+    "recommendation": "Investigate the source of missing 'Brand Name' and 'Property Name' data. Cleanse 'Marsha' and 'Unnamed: 18' columns as they may represent redundant or erroneous data entry. Validate 'Balance Collection Amount' negative values for potential dataentry errors or legitimate credits."
+  },
+  "insights": [
+    "The presence of negative values in 'Balance Collection Amount' and 'Credit Note Issued' suggests active credit management but also indicates potential disputes or overpayments that need reconciliation.",
+    "High overdue amounts in the 60-180 day and above 180 day buckets signal a need for immediate collection efforts on specific client accounts, particularly those with high 'Balance Amount' remaining.",
+    "The 'Due Days' column shows variability (e.g., 340 days for some entries), which may indicate non-standard payment terms or severely delinquent accounts requiring special attention."
+  ],
+  "recommendations": [
+    "Implement an automated aging report focused on 'Overdue 60 - 180 Days' and 'Overdue Above 180 Days' to prioritize collection efforts.",
+    "Conduct a client-level review of the top 5 clients by 'Balance Amount' to assess creditworthiness and negotiate payment plans for overdue balances.",
+    "Cleanse the 'Brand Name' and 'Property Name' fields to enable more granular performance analysis by brand or property type.",
+    "Review 'Nature of Services' to ensure tax compliance and proper classification of 'Export' vs 'Local' services, especially giventhe international client base (Canada, China, etc.)."
+  ],
+  "filters": [
+    {
+      "column": "Company Group",
+      "filter_type": "dropdown",
+      "label": "Company Group"
+    },
+    {
+      "column": "Service",
+      "filter_type": "dropdown",
+      "label": "Service"
+    },
+    {
+      "column": "Country",
+      "filter_type": "dropdown",
+      "label": "Country"
+    }
+  ],
+  "kpis": [
+    {
+      "metric": "Invoice Amount",
+      "aggregation": "sum",
+      "label": "Total Invoiced Revenue"
+    },
+    {
+      "metric": "Balance Amount",
+      "aggregation": "sum",
+      "label": "Total Outstanding Balance"
+    },
+    {
+      "metric": "Overdue 60 - 180 Days",
+      "aggregation": "sum",
+      "label": "Overdue Balance (60-180 Days)"
+    },
+    {
+      "metric": "Overdue Above 180 Days",
+      "aggregation": "sum",
+      "label": "Overdue Balance (>180 Days)"
+    },
+    {
+      "metric": "Invoice No",
+      "aggregation": "count",
+      "label": "Total Invoices"
+    }
+  ],
+  "charts": [
+    {
+      "chart_id": "chart-0",
+      "type": "waterfall",
+      "x": "Nature of Services",
+      "y": "Invoice Amount",
+      "title": "Revenue Contribution by Nature of Services",
+      "size": "full"
+    },
+    {
+      "chart_id": "chart-1",
+      "type": "stacked-bar",
+      "x": "Company Group",
+      "y": "Balance Amount",
+      "title": "Outstanding Balance by Company Group",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-2",
+      "type": "bar",
+      "x": "Service",
+      "y": "Invoice Amount",
+      "title": "Top Services by Invoiced Revenue",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-3",
+      "type": "pie",
+      "x": "Overdue 30 - 60 Days",
+      "y": "Overdue 60 - 180 Days",
+      "title": "AR Aging Distribution (30-180+ Days)",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-4",
+      "type": "line",
+      "x": "Invoice Date",
+      "y": "Invoice Amount",
+      "title": "Monthly Invoicing Trend",
+      "size": "1/2"
+    },
+    {
+      "chart_id": "chart-5",
+      "type": "bar",
+      "x": "Country",
+      "y": "Invoice Amount",
+      "title": "Revenue by Country",
+      "size": "1/2"
+    }
+  ],
+  "layout_grid": "2-col",
+  "narrative": "This dashboard provides a comprehensive view of the company's financial health, focusing on revenue recognition and accounts receivable management. By highlighting the aging of receivables and concentration of risk within key client groups, it enablesexecutives to identify immediate collection opportunities and assess credit risk. The inclusion of service-level and geographic breakdowns allows for strategic decisions regarding resource allocation and market focus. Data quality warnings regarding missing brand andproperty names suggest that while high-level insights are robust, granular operational analysis requires data cleansing."
+}
+=======================
+
+FILTER RAW: {'column': 'Company Group', 'filter_type': 'dropdown', 'label': 'Company Group'}
+FILTER RAW: {'column': 'Service', 'filter_type': 'dropdown', 'label': 'Service'}
+FILTER RAW: {'column': 'Country', 'filter_type': 'dropdown', 'label': 'Country'}
+KPI RAW: {'metric': 'Invoice Amount', 'aggregation': 'sum', 'label': 'Total Invoiced Revenue'}
+KPI RAW: {'metric': 'Balance Amount', 'aggregation': 'sum', 'label': 'Total Outstanding Balance'}
+KPI RAW: {'metric': 'Overdue 60 - 180 Days', 'aggregation': 'sum', 'label': 'Overdue Balance (60-180 Days)'}
+KPI RAW: {'metric': 'Overdue Above 180 Days', 'aggregation': 'sum', 'label': 'Overdue Balance (>180 Days)'}
+KPI RAW: {'metric': 'Invoice No', 'aggregation': 'count', 'label': 'Total Invoices'}
+CHART RAW: {'chart_id': 'chart-0', 'type': 'waterfall', 'x': 'Nature of Services', 'y': 'Invoice Amount', 'title': 'Revenue Contribution by Nature of Services', 'size': 'full'}
+CHART RAW: {'chart_id': 'chart-1', 'type': 'stacked-bar', 'x': 'Company Group', 'y': 'Balance Amount', 'title': 'Outstanding Balance by Company Group', 'size': '1/2'}
+CHART RAW: {'chart_id': 'chart-2', 'type': 'bar', 'x': 'Service', 'y': 'Invoice Amount', 'title': 'Top Services by Invoiced Revenue','size': '1/2'}
+CHART RAW: {'chart_id': 'chart-3', 'type': 'pie', 'x': 'Overdue 30 - 60 Days', 'y': 'Overdue 60 - 180 Days', 'title': 'AR Aging Distribution (30-180+ Days)', 'size': '1/2'}
+CHART RAW: {'chart_id': 'chart-4', 'type': 'line', 'x': 'Invoice Date', 'y': 'Invoice Amount', 'title': 'Monthly Invoicing Trend', 'size': '1/2'}
+CHART RAW: {'chart_id': 'chart-5', 'type': 'bar', 'x': 'Country', 'y': 'Invoice Amount', 'title': 'Revenue by Country', 'size': '1/2'}
+
+====FINAL CONFIG====
+Filters: 3
+KPIs: 5
+Charts: 6
+=======================
+
+STEP 7 - AFTER ANALYZE
+<class 'core.config.DashboardConfig'>
+DashboardConfig(filters=[FilterConfig(column='Company Group', filter_type='dropdown', label='Company Group', default_value=None), FilterConfig(column='Service', filter_type='dropdown', label='Service', default_value=None), FilterConfig(column='Country', filter_type='dropdown', label='Country', default_value=None)], kpis=[KPIConfig(metric='Invoice Amount', aggregation='sum', label='Total Invoiced Revenue', color='#1A365D', bg_color='#EFF6FF'), KPIConfig(metric='Balance Amount', aggregation='sum', label='Total Outstanding Balance',color='#1A365D', bg_color='#EFF6FF'), KPIConfig(metric='Overdue 60 - 180 Days', aggregation='sum', label='Overdue Balance (60-180 Days)', color='#1A365D', bg_color='#EFF6FF'), KPIConfig(metric='Overdue Above 180 Days', aggregation='sum', label='Overdue Balance (>180 Days)', color='#1A365D', bg_color='#EFF6FF'), KPIConfig(metric='Invoice No', aggregation='count', label='Total Invoices', color='#1A365D', bg_color='#EFF6FF')], charts=[ChartConfig(chart_id='chart-0', chart_type='waterfall', x_column='Nature of Services', y_column='Invoice Amount', groupby_column=None, size='full', aggregation='sum', title='Revenue Contribution by Nature of Services'), ChartConfig(chart_id='chart-1', chart_type='stacked-bar', x_column='Company Group', y_column='Balance Amount', groupby_column=None, size='1/2', aggregation='sum', title='Outstanding Balance by Company Group'), ChartConfig(chart_id='chart-2', chart_type='bar', x_column='Service', y_column='Invoice Amount', groupby_column=None, size='1/2', aggregation='sum', title='Top Services by Invoiced Revenue'), ChartConfig(chart_id='chart-3', chart_type='pie', x_column='Overdue 30 - 60 Days', y_column='Overdue 60 - 180 Days', groupby_column=None, size='1/2', aggregation='sum', title='AR Aging Distribution (30-180+ Days)'), ChartConfig(chart_id='chart-4', chart_type='line', x_column='Invoice Date', y_column='Invoice Amount', groupby_column=None, size='1/2', aggregation='sum', title='Monthly Invoicing Trend'), ChartConfig(chart_id='chart-5', chart_type='bar', x_column='Country', y_column='Invoice Amount', groupby_column=None, size='1/2', aggregation='sum', title='Revenue by Country')], layout_grid='2-col', reasoning="This dashboard provides a comprehensive view of the company's financial health, focusing on revenue recognition and accounts receivable management. By highlighting the aging of receivables and concentration of risk within key client groups, it enables executives to identify immediate collection opportunities and assess credit risk. The inclusion of service-level and geographic breakdowns allows for strategic decisions regarding resource allocation and market focus.Data quality warnings regarding missing brand and property names suggest that while high-level insights are robust, granular operational analysis requires data cleansing.")
+RESULT DIR
+['__annotations__', '__class__', '__dataclass_fields__', '__dataclass_params__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__match_args__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'charts', 'filters', 'kpis', 'layout_grid', 'reasoning', 'to_dict']
+TO DICT
+{'filters': [{'column': 'Company Group', 'filter_type': 'dropdown', 'label': 'Company Group'}, {'column': 'Service', 'filter_type': 'dropdown', 'label': 'Service'}, {'column': 'Country', 'filter_type': 'dropdown', 'label': 'Country'}], 'kpis': [{'metric': 'Invoice Amount', 'aggregation': 'sum', 'label': 'Total Invoiced Revenue'}, {'metric': 'Balance Amount', 'aggregation': 'sum', 'label': 'Total Outstanding Balance'}, {'metric': 'Overdue 60 - 180 Days', 'aggregation': 'sum', 'label': 'Overdue Balance (60-180 Days)'}, {'metric': 'Overdue Above 180 Days', 'aggregation': 'sum', 'label': 'Overdue Balance (>180 Days)'}, {'metric': 'Invoice No', 'aggregation': 'count', 'label': 'Total Invoices'}], 'charts': [{'chart_id': 'chart-0', 'chart_type': 'waterfall', 'x': 'Nature of Services', 'y': 'InvoiceAmount', 'groupby': None, 'aggregation': 'sum', 'size': 'full'}, {'chart_id': 'chart-1', 'chart_type': 'stacked-bar', 'x': 'Company Group', 'y': 'Balance Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-2', 'chart_type': 'bar', 'x':'Service', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-3', 'chart_type': 'pie','x': 'Overdue 30 - 60 Days', 'y': 'Overdue 60 - 180 Days', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-4', 'chart_type': 'line', 'x': 'Invoice Date', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-5', 'chart_type': 'bar', 'x': 'Country', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}], 'layout_grid': '2-col', 'reasoning': "This dashboard provides a comprehensive view of the company's financial health, focusing on revenue recognition and accounts receivable management. By highlighting the aging of receivables and concentration of risk within key clientgroups, it enables executives to identify immediate collection opportunities and assess credit risk. The inclusion of service-level and geographic breakdowns allows for strategic decisions regarding resource allocation and market focus. Data quality warnings regarding missing brand and property names suggest that while high-level insights are robust, granular operational analysis requires data cleansing."}
+RETURNING TO STORE:
+<class 'str'>
+This dashboard provides a comprehensive view of the company's financial health, focusing on revenue recognition and accounts receivable management. By highlighting the aging of receivables and concentration of risk within key client groups, it enables executives to identify immediate collection opportunities and assess credit risk. The inclusion of service-level and geographic breakdowns allows forstrategic decisions regarding resource allocation and market focus. Data quality warnings regarding missing brand and property names suggest that while high-level insights are robust, granular operational analysis requires data cleansing.
+RETURN TYPE: <class 'dict'>
+STORE DATA {'filters': [{'column': 'Company Group', 'filter_type': 'dropdown', 'label': 'Company Group'}, {'column': 'Service', 'filter_type': 'dropdown', 'label': 'Service'}, {'column': 'Country', 'filter_type': 'dropdown', 'label': 'Country'}], 'kpis': [{'metric': 'Invoice Amount', 'aggregation': 'sum', 'label': 'Total Invoiced Revenue'}, {'metric': 'Balance Amount', 'aggregation': 'sum', 'label': 'Total Outstanding Balance'}, {'metric': 'Overdue 60 - 180 Days', 'aggregation': 'sum', 'label': 'Overdue Balance (60-180 Days)'}, {'metric': 'Overdue Above 180 Days', 'aggregation': 'sum', 'label': 'Overdue Balance (>180 Days)'}, {'metric': 'Invoice No', 'aggregation': 'count', 'label': 'Total Invoices'}], 'charts': [{'chart_id': 'chart-0', 'chart_type': 'waterfall', 'x': 'Nature of Services', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': 'full'}, {'chart_id': 'chart-1', 'chart_type': 'stacked-bar', 'x':'Company Group', 'y': 'Balance Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-2', 'chart_type': 'bar', 'x': 'Service', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-3', 'chart_type': 'pie', 'x': 'Overdue 30 - 60 Days', 'y': 'Overdue 60 - 180 Days', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-4', 'chart_type': 'line', 'x': 'Invoice Date', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-5', 'chart_type': 'bar', 'x': 'Country', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}], 'layout_grid': '2-col', 'reasoning': "This dashboard provides a comprehensive view of the company's financial health, focusing on revenue recognition and accounts receivable management. By highlighting the aging of receivables and concentration of risk withinkey client groups, it enables executives to identify immediate collection opportunities and assess credit risk. The inclusion of service-level and geographic breakdowns allows for strategic decisions regarding resource allocation and market focus. Data quality warnings regarding missing brand and property names suggest that while high-level insights are robust, granular operational analysis requires data cleansing."}
