@@ -1,1 +1,24 @@
+# ============================================================
+# CHECK SUSPICIOUS EFFECTIVE START DATES
+# ============================================================
 
+suspicious_effective = employee_master[
+    (employee_master["Effective Start Date"] < pd.Timestamp("2000-01-01")) |
+    (employee_master["Effective Start Date"] > pd.Timestamp("2026-12-31"))
+]
+
+print("Suspicious Effective Start Date records:")
+print(len(suspicious_effective))
+
+display(
+    suspicious_effective[
+        [
+            "Employee Code",
+            "Employee Name",
+            "Actual Join Date",
+            "Effective Start Date",
+            "Resignation Date",
+            "Employee Status"
+        ]
+    ]
+)
