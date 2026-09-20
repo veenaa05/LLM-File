@@ -1,1 +1,56 @@
+import pandas as pd
 
+# Convert required date columns
+date_cols = [
+    "Actual Join Date",
+    "Resignation Date",
+    "Last Working Date",
+    "Birth Date"
+]
+
+for col in date_cols:
+    employee_master[col] = pd.to_datetime(
+        employee_master[col],
+        errors="coerce"
+    )
+
+print("Employee Master Shape:", employee_master.shape)
+print("Unique Employees:", employee_master["Employee Code"].nunique())
+
+print("\n--- DATE RANGE ---")
+print("Earliest Joining Date :", employee_master["Actual Join Date"].min())
+print("Latest Joining Date   :", employee_master["Actual Join Date"].max())
+print("Earliest Resignation  :", employee_master["Resignation Date"].min())
+print("Latest Resignation    :", employee_master["Resignation Date"].max())
+print("Earliest Last Working :", employee_master["Last Working Date"].min())
+print("Latest Last Working   :", employee_master["Last Working Date"].max())
+
+print("\n--- REQUIRED FIELD AVAILABILITY ---")
+
+required_cols = [
+    "Employee Code",
+    "Gender",
+    "Religion",
+    "Birth Date",
+    "Actual Join Date",
+    "Resignation Date",
+    "Last Working Date",
+    "Employee Status"
+]
+
+for col in required_cols:
+    print(
+        f"{col:25} "
+        f"Available: {employee_master[col].notna().sum():6} | "
+        f"Missing: {employee_master[col].isna().sum():6} | "
+        f"Missing %: {employee_master[col].isna().mean()*100:.2f}%"
+    )
+
+print("\n--- GENDER VALUES ---")
+print(employee_master["Gender"].value_counts(dropna=False))
+
+print("\n--- RELIGION VALUES ---")
+print(employee_master["Religion"].value_counts(dropna=False))
+
+print("\n--- EMPLOYEE STATUS VALUES ---")
+print(employee_master["Employee Status"].value_counts(dropna=False))
