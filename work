@@ -1,1 +1,32 @@
+# ============================================================
+# AGE CALCULATION - CORRECTED
+# ============================================================
 
+def calculate_age(birth_dates, reference_date):
+
+    birth_dates = pd.to_datetime(
+        birth_dates,
+        errors="coerce"
+    )
+
+    reference_date = pd.Timestamp(reference_date)
+
+    age = (
+        reference_date.year
+        - birth_dates.dt.year
+    )
+
+    # Has the employee's birthday occurred yet in this year?
+    birthday_not_reached = (
+        (birth_dates.dt.month > reference_date.month)
+        |
+        (
+            (birth_dates.dt.month == reference_date.month)
+            &
+            (birth_dates.dt.day > reference_date.day)
+        )
+    )
+
+    age = age - birthday_not_reached.astype(int)
+
+    return age
