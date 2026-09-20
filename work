@@ -1,567 +1,187 @@
-STEP 5 - DATASET SUMMARY CREATED
-ROWS: 4205
-COLUMNS: 31
-Client Name -> dtype=categorical, missing=0.17%, unique=1202
-Marsha -> dtype=categorical, missing=57.62%, unique=555
-Property Name -> dtype=categorical, missing=77.31%, unique=451
-Invoice No -> dtype=categorical, missing=0.17%, unique=4198
-Invoice Date -> dtype=temporal, missing=0.17%, unique=528
-Due Days -> dtype=numeric, missing=0.17%, unique=528
-Revenue Head -> dtype=categorical, missing=8.25%, unique=26
-Nature of Services -> dtype=categorical, missing=8.25%, unique=6
-Service -> dtype=categorical, missing=0.17%, unique=48
-Invoice Amount -> dtype=numeric, missing=0.1%, unique=2017
-Below 30 Days -> dtype=numeric, missing=0.14%, unique=843
-Overdue 30 - 60 Days -> dtype=numeric, missing=0.17%, unique=440
-Overdue 60 - 180 Days -> dtype=numeric, missing=0.17%, unique=502
-Overdue Above 180 Days -> dtype=numeric, missing=0.17%, unique=249
-Above 1 year -> dtype=numeric, missing=0.17%, unique=292
-Balance Collection Amount -> dtype=numeric, missing=0.17%, unique=401
-Credit Note Issued -> dtype=numeric, missing=0.17%, unique=4
-Balance Amount -> dtype=numeric, missing=0.17%, unique=2376
-Unnamed: 18 -> dtype=numeric, missing=79.5%, unique=173
-Forex Balance Amount -> dtype=numeric, missing=0.17%, unique=209
-Particulars -> dtype=categorical, missing=0.17%, unique=3881
-Manager -> dtype=categorical, missing=0.17%, unique=79
-Partner -> dtype=categorical, missing=0.17%, unique=10
-Department -> dtype=categorical, missing=0.17%, unique=8
-Company Group -> dtype=categorical, missing=0.17%, unique=5
-Group -> dtype=categorical, missing=0.17%, unique=275
-Contact Person Name -> dtype=categorical, missing=8.7%, unique=1194
-Brand Name -> dtype=categorical, missing=98.12%, unique=19
-Project MID -> dtype=categorical, missing=10.15%, unique=1881
-Country -> dtype=categorical, missing=0.17%, unique=43
-GST NO -> dtype=numeric, missing=0.17%, unique=569
-STEP 6 - BEFORE ANALYZE
-[INFO] Sending data to LLM for analysis...
+def run_ai_analysis(n_clicks, df_json, profiles, objective):
+    if not n_clicks:
+        print("SKIPPING INITIAL LOAD")
+        raise PreventUpdate
+    
+    import time
+    print("=" * 80)
+    print("AI CALLBACK FIRED")
+    print("N_CLICKS:", n_clicks)
+    print("TIME:", time.time())
+    print("=" *80)
+    
+    print("STEP 1- CALLBACK STARTED")
+    if not df_json:
+        print("STEP 2- NO DF JSON")
+        return dbc.Alert("No data available", color="warning"), None
+    print("DF_JSON IS NONE:", df_json is None)
+    print("DF_JSON LENGTH:", len(df_json) if df_json else 0)
+    print("STEP 3- BEFORE READ_JSON")   
+    try:
+        print("DF_JSON TYPE:", type(df_json))
+        print("DF_JSON PREVIEW:", str(df_json)[:200])  # Print the first 200 chars to avoid overload
+        
+        # df = pd.read_json(df_json, orient='split')
+        from io import StringIO
+        df = pd.read_json(StringIO(df_json), orient='split')
+        print("STEP 4- AFTER READ_JSON")
+        print(df.shape)
+        # ============================================================
+        # STEP 5 - BUILD DATA-DRIVEN DATASET SUMMARY
+        # ============================================================
 
-===== PROMPT =====
-You are a senior data analytics consultant. Analyze the uploaded dataset and generate a professional, data-grounded dashboard configuration with executive insights.
+        summary = {
+            "row_count": int(len(df)),
+            "column_count": int(len(df.columns)),
+            "columns": list(df.columns),
+            "column_details": {}
+        }
 
-CONTEXT:
-No additional context provided
+        # Use the profiler / confirmed data types as the source of truth.
+        # This avoids mistakes such as Invoice Date being interpreted
+        # as numeric by pandas.
 
-=============================================================================
-COLUMN PROFILES
-=============================================================================
+        for col in df.columns:
 
-The following column profiles describe the schema of the uploaded dataset.
+            # Get profile information if available
+            profile = profiles.get(col, {}) if isinstance(profiles, dict) else {}
 
-{
-  "Client Name": {
-    "dtype": "categorical",
-    "cardinality": 1202,
-    "missing_pct": 0.2,
-    "range": null,
-    "top_values": [
-      "GRASIM INDS LTD",
-      "DUET INDIA HOTELS (CHENNAI OMR) PVT. LTD.",
-      "GRASIM INDUSTRIES LIMITED",
-      "PALLAZZIO HOTELS & LEISURE LTD.",
-      "GRASIM INDUSTRIES LIMITED, STAPLE FIBRE DIVISION, NAGDA"
-    ],
-    "is_temporal": false,
-    "has_outliers": false
-  },
-  "Marsha": {
-    "dtype": "categorical",
-    "cardinality": 555,
-    "missing_pct": 57.6,
-    "range": null,
-    "top_values": [
-      "MAAFO",
-      "BOMXR",
-      "IDRSI",
-      "DEDFI",
-      "."
-    ],
-    "is_temporal": false,
-    "has_outliers": false
-  },
-  "Property Name": {
-    "dtype": "categorical",
-    "cardinality": 451,
-    "missing_pct": 77.3,
-    "range": null,
-    "top_values": [
-      "Four Points by Sheraton Chennai OMR",
-      "The St. Regis Mumbai",
-      "Fairfield By Marriott Dehradun",
-      "FAIRFIELD BY MARRIOTT JAIPUR TONK ROAD",
-      "COURTYARD BY MARRIOTT RANCHI"
-    ],
-    "is_temporal": false,
-    "has_outliers": false
-  },
-  "Invoice No": {
-    "dtype": "categorical",
-    "cardinality": 4198,
-    "missing_pct": 0.2,
-    "range": null,
-    "top_values": [
-      "OSO2526-27011449",
-      "OSO2526-27040019",
-      "OSO2526-27040020",
-      "OSO2526-27011602",
-      "OSO2526-27020476"
-    ],
-    "is_temporal": false,
-    "has_outliers": false
-  },
-  "Invoice Date": {
-    "dtype": "temporal",
-    "cardinality": 528,
-    "missing_pct": 0.2,
-    "range": null,
-    "top_values": [
-      "2026-02-05",
-      "2026-03-06",
-      "2026-03-09",
-      "2026-03-05",
-      "2026-02-04"
-    ],
-    "is_temporal": true,
-    "has_outliers": false
-  },
-  "Due Days": {
-    "dtype": "numeric",
-    "cardinality": 528,
-    "missing_pct": 0.2,
-    "range": null,
-    "top_values": [
-      "39.0",
-      "10.0",
-      "7.0",
-      "11.0",
-      "40.0"
-    ],
-    "is_temporal": false,
-    "has_outliers": false
-  },
-  "Revenue Head": {
-    "dtype": "categorical",
-    "cardinality": 26,
-    "missing_pct": 8.3,
-    "range": null,
-    "top_values": [
-      "Payroll Management",
-      "SAM",
-      "DMS",
-      "HRMS",
-      "Recon Tool"
-    ],
-    "is_temporal": false,
-    "has_outliers": false
-  },
-  "Nature of Services": {
-    "dtype": "categorical",
-    "cardinality": 6,
-    "missing_pct": 8.3,
-    "range": null,
-    "top_values": [
-      "Local",
-      "Export",
-      "Exempt",
-      "ON ACCOUNT",
-      "LOCAL"
-    ],
-    "is_temporal": false,
-    "has_outliers": false
-  },
-  "Service": 
-==================
+            if isinstance(profile, dict):
+                dtype = profile.get("dtype", "categorical")
+            else:
+                dtype = getattr(profile, "dtype", "categorical")
 
-[INFO] Base URL : https://litellm.osourceglobal.com:/v1
-[INFO] Model    : local-qwen3.6-nvfp4-vllm
-[DEBUG] Response Status: 200
+            series = df[col]
 
-===== LLM RESPONSE =====
-{
-  "executive_summary": {
-    "key_findings": [
-      "The dataset contains 4,205 invoice records with a total invoiced value of approximately 242.98 million. The mean invoice amount is 57,838.55, but the median is significantly lower at 23,010.00, indicating a right-skewed distribution where a small number of high-value invoices drive the total volume.",
-      "There is a significant discrepancy between total invoiced amounts and collected balances. The sum of 'Balance Collection Amount' is negative (-24.69 million), while the 'Balance Amount' sums to 218.06 million. This suggests that the 'Balance Collection Amount'column may represent net adjustments, credits, or specific collection events rather than gross collections, or that a substantial portion of invoiced revenue remains outstanding.",
-      "Data quality is compromised by high missingness in key descriptive fields. 'Brand Name' has 98.12% missing values, 'Property Name' has 77.31% missing values, and 'Marsha' has 57.62% missing values. These gaps limit the ability to segment performance by brand or specific property location effectively."
-    ],
-    "data_quality_score": 0.65,
-    "overall_health": "Caution",
-    "missing_data_pct": 12.4,
-    "reliability": "Medium"
-  },
-  "trends": [
-    {
-      "column": "Invoice Date",
-      "direction": "insufficient_evidence",
-      "growth_rate": null,
-      "evidence": "The dataset statistics indicate that the 'Invoice Date' column has a min and max date of '1970-01-01' with a span of 0 days, despite the sample data showing valid dates in 2025-2026. This suggests a data parsing or storage error in the statistical summary, making trend analysis unreliable based on the provided statistics."
-    }
-  ],
-  "data_quality": {
-    "missing_values": {
-      "Brand Name": 98.12,
-      "Property Name": 77.31,
-      "Marsha": 57.62,
-      "Unnamed: 18": 79.5,
-      "Nature of Services": 8.25,
-      "Revenue Head": 8.25,
-      "Contact Person Name": 8.7,
-      "Project MID": 10.15
-    },
-    "outliers_detected": false,
-    "data_completeness": 0.876,
-    "recommendation": "Investigate the 'Invoice Date' column for parsing errors, as the statistical summary shows invalid dates (1970-01-01) while sample data shows valid future dates. Prioritize cleaning 'Brand Name' and 'Property Name' to enable meaningful segmentation, as they have >75% missing values."
-  },
-  "insights": [
-    "The 'Nature of Services' is heavily skewed towards 'Local' (77.42%) compared to 'Export' (21.62%), with very few 'Exempt' transactions. This suggests the primary revenue base is domestic, which may have different tax and collection implications.",
-    "The 'Department' distribution shows 'PAYROLL' (35.25%) and 'SOFTWARE' (33.13%) as the dominant service areas. This indicates a diversified service portfolio, but also suggests that collection strategies might need to be tailored differently for payroll vs. software services.",
-    "The 'Balance Collection Amount' column contains only negative values and zeros, with a mean of -5,881.63. This is unusual for a collection metric and suggests it might represent deductions, credits, or net adjustments rather than gross cash inflows. This requires clarification to accurately assess cash flow health.",
-    "High-cardinality columns like 'Client Name' (1,202 unique values) and 'Invoice No' (4,198 unique values) act as identifiers rather than analytical dimensions. Aggregating by 'Group' or 'Company Group' provides more actionable insights for executive review."
-  ],
-  "recommendations": [
-    "Clarify the definition and calculation of 'Balance Collection Amount' to determine if it represents net collections, credits, oradjustments. If it is not gross collections, a true collection metric should be derived or added.",
-    "Investigate the 'Invoice Date' data integrity issue. If the dates are valid in the source but parsed incorrectly in the statistics, correct the parsing to enable accurate time-series analysis of invoicing patterns.",
-    "Improve data completeness for 'Brand Name' and 'Property Name'. If these fields are critical for performance analysis, implementdata entry validation or automated mapping to reduce the >75% missing rate.",
-    "Use 'Group' or 'Company Group' as primary segmentation dimensions for executive dashboards, as they have low cardinality and lowmissingness, providing clear strategic views."
-  ],
-  "filters": [
-    {
-      "column": "Group",
-      "filter_type": "dropdown",
-      "label": "Client Group"
-    },
-    {
-      "column": "Department",
-      "filter_type": "dropdown",
-      "label": "Service Department"
-    },
-    {
-      "column": "Nature of Services",
-      "filter_type": "dropdown",
-      "label": "Service Nature"
-    }
-  ],
-  "kpis": [
-    {
-      "metric": "Invoice Amount",
-      "aggregation": "sum",
-      "label": "Total Invoiced Amount"
-    },
-    {
-      "metric": "Balance Amount",
-      "aggregation": "sum",
-      "label": "Total Outstanding Balance"
-    }
-========================
+            # Basic information for every column
+            col_info = {
+                "dtype": dtype,
+                "missing_count": int(series.isna().sum()),
+                "missing_pct": round(float(series.isna().mean() * 100), 2),
+                "unique_count": int(series.nunique(dropna=True)),
+            }
 
+            # --------------------------------------------------------
+            # NUMERIC COLUMN
+            # --------------------------------------------------------
+            if dtype == "numeric":
 
-====RAW LLM RESPONSE====
-{
-  "executive_summary": {
-    "key_findings": [
-      "The dataset contains 4,205 invoice records with a total invoiced value of approximately 242.98 million. The mean invoice amount is 57,838.55, but the median is significantly lower at 23,010.00, indicating a right-skewed distribution where a small number of high-value invoices drive the total volume.",
-      "There is a significant discrepancy between total invoiced amounts and collected balances. The sum of 'Balance Collection Amount' is negative (-24.69 million), while the 'Balance Amount' sums to 218.06 million. This suggests that the 'Balance Collection Amount'column may represent net adjustments, credits, or specific collection events rather than gross collections, or that a substantial portion of invoiced revenue remains outstanding.",
-      "Data quality is compromised by high missingness in key descriptive fields. 'Brand Name' has 98.12% missing values, 'Property Name' has 77.31% missing values, and 'Marsha' has 57.62% missing values. These gaps limit the ability to segment performance by brand or specific property location effectively."
-    ],
-    "data_quality_score": 0.65,
-    "overall_health": "Caution",
-    "missing_data_pct": 12.4,
-    "reliability": "Medium"
-  },
-  "trends": [
-    {
-      "column": "Invoice Date",
-      "direction": "insufficient_evidence",
-      "growth_rate": null,
-      "evidence": "The dataset statistics indicate that the 'Invoice Date' column has a min and max date of '1970-01-01' with a span of 0 days, despite the sample data showing valid dates in 2025-2026. This suggests a data parsing or storage error in the statistical summary, making trend analysis unreliable based on the provided statistics."
-    }
-  ],
-  "data_quality": {
-    "missing_values": {
-      "Brand Name": 98.12,
-      "Property Name": 77.31,
-      "Marsha": 57.62,
-      "Unnamed: 18": 79.5,
-      "Nature of Services": 8.25,
-      "Revenue Head": 8.25,
-      "Contact Person Name": 8.7,
-      "Project MID": 10.15
-    },
-    "outliers_detected": false,
-    "data_completeness": 0.876,
-    "recommendation": "Investigate the 'Invoice Date' column for parsing errors, as the statistical summary shows invalid dates (1970-01-01) while sample data shows valid future dates. Prioritize cleaning 'Brand Name' and 'Property Name' to enable meaningful segmentation, as they have >75% missing values."
-  },
-  "insights": [
-    "The 'Nature of Services' is heavily skewed towards 'Local' (77.42%) compared to 'Export' (21.62%), with very few 'Exempt' transactions. This suggests the primary revenue base is domestic, which may have different tax and collection implications.",
-    "The 'Department' distribution shows 'PAYROLL' (35.25%) and 'SOFTWARE' (33.13%) as the dominant service areas. This indicates a diversified service portfolio, but also suggests that collection strategies might need to be tailored differently for payroll vs. software services.",
-    "The 'Balance Collection Amount' column contains only negative values and zeros, with a mean of -5,881.63. This is unusual for a collection metric and suggests it might represent deductions, credits, or net adjustments rather than gross cash inflows. This requires clarification to accurately assess cash flow health.",
-    "High-cardinality columns like 'Client Name' (1,202 unique values) and 'Invoice No' (4,198 unique values) act as identifiers rather than analytical dimensions. Aggregating by 'Group' or 'Company Group' provides more actionable insights for executive review."
-  ],
-  "recommendations": [
-    "Clarify the definition and calculation of 'Balance Collection Amount' to determine if it represents net collections, credits, oradjustments. If it is not gross collections, a true collection metric should be derived or added.",
-    "Investigate the 'Invoice Date' data integrity issue. If the dates are valid in the source but parsed incorrectly in the statistics, correct the parsing to enable accurate time-series analysis of invoicing patterns.",
-    "Improve data completeness for 'Brand Name' and 'Property Name'. If these fields are critical for performance analysis, implementdata entry validation or automated mapping to reduce the >75% missing rate.",
-    "Use 'Group' or 'Company Group' as primary segmentation dimensions for executive dashboards, as they have low cardinality and lowmissingness, providing clear strategic views."
-  ],
-  "filters": [
-    {
-      "column": "Group",
-      "filter_type": "dropdown",
-      "label": "Client Group"
-    },
-    {
-      "column": "Department",
-      "filter_type": "dropdown",
-      "label": "Service Department"
-    },
-    {
-      "column": "Nature of Services",
-      "filter_type": "dropdown",
-      "label": "Service Nature"
-    }
-  ],
-  "kpis": [
-    {
-      "metric": "Invoice Amount",
-      "aggregation": "sum",
-      "label": "Total Invoiced Amount"
-    },
-    {
-      "metric": "Balance Amount",
-      "aggregation": "sum",
-      "label": "Total Outstanding Balance"
-    },
-    {
-      "metric": "Invoice No",
-      "aggregation": "count",
-      "label": "Total Invoices"
-    },
-    {
-      "metric": "Due Days",
-      "aggregation": "mean",
-      "label": "Average Due Days"
-    }
-  ],
-  "charts": [
-    {
-      "chart_id": "chart-0",
-      "type": "bar",
-      "x": "Group",
-      "y": "Invoice Amount",
-      "title": "Total Invoiced Amount by Client Group",
-      "size": "1/2"
-    },
-    {
-      "chart_id": "chart-1",
-      "type": "bar",
-      "x": "Department",
-      "y": "Invoice Amount",
-      "title": "Total Invoiced Amount by Department",
-      "size": "1/2"
-    },
-    {
-      "chart_id": "chart-2",
-      "type": "pie",
-      "x": "Nature of Services",
-      "y": "Invoice Amount",
-      "title": "Distribution of Invoiced Amount by Service Nature",
-      "size": "1/2"
-    },
-    {
-      "chart_id": "chart-3",
-      "type": "bar",
-      "x": "Company Group",
-      "y": "Balance Amount",
-      "title": "Outstanding Balance by Company Group",
-      "size": "1/2"
-    },
-    {
-      "chart_id": "chart-4",
-      "type": "histogram",
-      "x": "Invoice Amount",
-      "y": null,
-      "title": "Distribution of Invoice Amounts",
-      "size": "1/2"
-    }
-  ],
-  "layout_grid": "2-col",
-  "narrative": "This dashboard provides an overview of invoicing and balance status across client groups and service departments. Thedata reveals a high total invoiced value with a significant outstanding balance, highlighting potential cash flow concerns. The heavyskew in 'Invoice Amount' suggests that a few large invoices drive the total, while the majority of invoices are smaller. Data qualityissues, particularly in 'Brand Name' and 'Property Name', limit granular analysis. The 'Balance Collection Amount' column requires clarification as its negative values suggest it may not represent gross collections. Users should focus on 'Group' and 'Department' for strategic segmentation and investigate the 'Invoice Date' parsing error for accurate temporal analysis."
-}
-===========================
+                numeric_series = pd.to_numeric(series, errors="coerce").dropna()
 
-====CHARTS FROM LLM====
-[{'chart_id': 'chart-0', 'type': 'bar', 'x': 'Group', 'y': 'Invoice Amount', 'title': 'Total Invoiced Amount by Client Group', 'size': '1/2'}, {'chart_id': 'chart-1', 'type': 'bar', 'x': 'Department', 'y': 'Invoice Amount', 'title': 'Total Invoiced Amount by Department', 'size': '1/2'}, {'chart_id': 'chart-2', 'type': 'pie', 'x': 'Nature of Services', 'y': 'Invoice Amount', 'title': 'Distribution of Invoiced Amount by Service Nature', 'size': '1/2'}, {'chart_id': 'chart-3', 'type': 'bar', 'x': 'Company Group', 'y': 'Balance Amount', 'title': 'Outstanding Balance by Company Group', 'size': '1/2'}, {'chart_id': 'chart-4', 'type': 'histogram', 'x': 'Invoice Amount', 'y': None, 'title': 'Distribution of Invoice Amounts', 'size': '1/2'}]
-====================
+                if len(numeric_series) > 0:
 
+                    col_info.update({
+                        "min": float(numeric_series.min()),
+                        "max": float(numeric_series.max()),
+                        "mean": round(float(numeric_series.mean()), 2),
+                        "median": float(numeric_series.median()),
+                        "sum": float(numeric_series.sum()),
+                        "zero_pct": round(
+                            float((numeric_series == 0).mean() * 100), 2
+                        ),
+                        "negative_pct": round(
+                            float((numeric_series < 0).mean() * 100), 2
+                        )
+                    })
 
-====CONFIG_DICT====
-{'executive_summary': {'key_findings': ['The dataset contains 4,205 invoice records with a total invoiced value of approximately 242.98 million. The mean invoice amount is 57,838.55, but the median is significantly lower at 23,010.00, indicating a right-skewed distribution where a small number of high-value invoices drive the total volume.', "There is a significant discrepancy between total invoiced amounts and collected balances. The sum of 'Balance Collection Amount' is negative (-24.69 million), while the 'Balance Amount' sumsto 218.06 million. This suggests that the 'Balance Collection Amount' column may represent net adjustments, credits, or specific collection events rather than gross collections, or that a substantial portion of invoiced revenue remains outstanding.", "Data quality iscompromised by high missingness in key descriptive fields. 'Brand Name' has 98.12% missing values, 'Property Name' has 77.31% missingvalues, and 'Marsha' has 57.62% missing values. These gaps limit the ability to segment performance by brand or specific property location effectively."], 'data_quality_score': 0.65, 'overall_health': 'Caution', 'missing_data_pct': 12.4, 'reliability': 'Medium'}, 'trends': [{'column': 'Invoice Date', 'direction': 'insufficient_evidence', 'growth_rate': None, 'evidence': "The dataset statistics indicate that the 'Invoice Date' column has a min and max date of '1970-01-01' with a span of 0 days, despite the sample data showing valid dates in 2025-2026. This suggests a data parsing or storage error in the statistical summary, making trend analysis unreliable basedon the provided statistics."}], 'data_quality': {'missing_values': {'Brand Name': 98.12, 'Property Name': 77.31, 'Marsha': 57.62, 'Unnamed: 18': 79.5, 'Nature of Services': 8.25, 'Revenue Head': 8.25, 'Contact Person Name': 8.7, 'Project MID': 10.15}, 'outliers_detected': False, 'data_completeness': 0.876, 'recommendation': "Investigate the 'Invoice Date' column for parsing errors, as the statistical summary shows invalid dates (1970-01-01) while sample data shows valid future dates. Prioritize cleaning 'Brand Name' and 'PropertyName' to enable meaningful segmentation, as they have >75% missing values."}, 'insights': ["The 'Nature of Services' is heavily skewed towards 'Local' (77.42%) compared to 'Export' (21.62%), with very few 'Exempt' transactions. This suggests the primary revenue base is domestic, which may have different tax and collection implications.", "The 'Department' distribution shows 'PAYROLL' (35.25%) and 'SOFTWARE' (33.13%) as the dominant service areas. This indicates a diversified service portfolio, but also suggests that collection strategies might need to be tailored differently for payroll vs. software services.", "The 'Balance Collection Amount' column contains only negative values and zeros, with a mean of -5,881.63. This is unusual for a collection metric and suggests it might represent deductions, credits, or net adjustments rather than gross cash inflows. This requires clarification to accurately assess cash flow health.", "High-cardinality columns like 'Client Name' (1,202 unique values) and 'Invoice No' (4,198 unique values) act as identifiers rather than analytical dimensions. Aggregating by 'Group' or 'Company Group' provides more actionable insights for executive review."], 'recommendations': ["Clarify the definition and calculation of 'Balance Collection Amount' to determine if it represents net collections, credits, or adjustments. If it is not gross collections, a true collection metric should be derived or added.", "Investigate the 'Invoice Date' data integrity issue. If the dates are valid in the source but parsed incorrectly in the statistics, correct the parsing to enable accurate time-series analysis of invoicing patterns.", "Improve data completeness for 'Brand Name' and 'Property Name'. If thesefields are critical for performance analysis, implement data entry validation or automated mapping to reduce the >75% missing rate.","Use 'Group' or 'Company Group' as primary segmentation dimensions for executive dashboards, as they have low cardinality and low missingness, providing clear strategic views."], 'filters': [{'column': 'Group', 'filter_type': 'dropdown', 'label': 'Client Group'}, {'column': 'Department', 'filter_type': 'dropdown', 'label': 'Service Department'}, {'column': 'Nature of Services', 'filter_type': 'dropdown', 'label': 'Service Nature'}], 'kpis': [{'metric': 'Invoice Amount', 'aggregation': 'sum', 'label': 'Total Invoiced Amount'}, {'metric': 'Balance Amount', 'aggregation': 'sum', 'label': 'Total Outstanding Balance'}, {'metric': 'Invoice No', 'aggregation': 'count', 'label': 'Total Invoices'}, {'metric': 'Due Days', 'aggregation': 'mean', 'label': 'Average Due Days'}], 'charts': [{'chart_id': 'chart-0', 'type': 'bar', 'x': 'Group', 'y': 'Invoice Amount', 'title': 'Total Invoiced Amount by Client Group', 'size': '1/2'}, {'chart_id': 'chart-1', 'type': 'bar', 'x': 'Department', 'y': 'Invoice Amount', 'title': 'Total Invoiced Amount by Department', 'size': '1/2'}, {'chart_id': 'chart-2', 'type': 'pie', 'x': 'Nature of Services', 'y': 'Invoice Amount', 'title': 'Distribution of Invoiced Amount by Service Nature', 'size': '1/2'}, {'chart_id': 'chart-3', 'type': 'bar', 'x': 'Company Group', 'y': 'Balance Amount', 'title': 'Outstanding Balance by Company Group', 'size': '1/2'}, {'chart_id': 'chart-4', 'type': 'histogram', 'x': 'Invoice Amount', 'y': None, 'title': 'Distribution of Invoice Amounts', 'size': '1/2'}], 'layout_grid': '2-col', 'narrative': "This dashboard provides an overview of invoicing and balance status across client groups and service departments. The data reveals a high total invoiced value with a significant outstanding balance, highlighting potential cash flow concerns. The heavy skew in 'Invoice Amount' suggests that a few large invoices drive the total, while the majority of invoices are smaller. Data quality issues, particularly in 'Brand Name' and 'Property Name', limit granular analysis. The 'Balance Collection Amount' column requires clarification as its negative values suggest it may not represent gross collections. Users should focus on 'Group' and 'Department' for strategic segmentation and investigate the 'Invoice Date' parsing error for accurate temporal analysis."}
-======================
-[OK] LLM analysis successful
-[INFO] LLM suggested: 3 filters, 4 KPIs, 5 charts
+            # --------------------------------------------------------
+            # TEMPORAL COLUMN
+            # --------------------------------------------------------
+            elif dtype == "temporal":
 
-====CONFIG_DICT====
-{
-  "executive_summary": {
-    "key_findings": [
-      "The dataset contains 4,205 invoice records with a total invoiced value of approximately 242.98 million. The mean invoice amount is 57,838.55, but the median is significantly lower at 23,010.00, indicating a right-skewed distribution where a small number of high-value invoices drive the total volume.",
-      "There is a significant discrepancy between total invoiced amounts and collected balances. The sum of 'Balance Collection Amount' is negative (-24.69 million), while the 'Balance Amount' sums to 218.06 million. This suggests that the 'Balance Collection Amount'column may represent net adjustments, credits, or specific collection events rather than gross collections, or that a substantial portion of invoiced revenue remains outstanding.",
-      "Data quality is compromised by high missingness in key descriptive fields. 'Brand Name' has 98.12% missing values, 'Property Name' has 77.31% missing values, and 'Marsha' has 57.62% missing values. These gaps limit the ability to segment performance by brand or specific property location effectively."
-    ],
-    "data_quality_score": 0.65,
-    "overall_health": "Caution",
-    "missing_data_pct": 12.4,
-    "reliability": "Medium"
-  },
-  "trends": [
-    {
-      "column": "Invoice Date",
-      "direction": "insufficient_evidence",
-      "growth_rate": null,
-      "evidence": "The dataset statistics indicate that the 'Invoice Date' column has a min and max date of '1970-01-01' with a span of 0 days, despite the sample data showing valid dates in 2025-2026. This suggests a data parsing or storage error in the statistical summary, making trend analysis unreliable based on the provided statistics."
-    }
-  ],
-  "data_quality": {
-    "missing_values": {
-      "Brand Name": 98.12,
-      "Property Name": 77.31,
-      "Marsha": 57.62,
-      "Unnamed: 18": 79.5,
-      "Nature of Services": 8.25,
-      "Revenue Head": 8.25,
-      "Contact Person Name": 8.7,
-      "Project MID": 10.15
-    },
-    "outliers_detected": false,
-    "data_completeness": 0.876,
-    "recommendation": "Investigate the 'Invoice Date' column for parsing errors, as the statistical summary shows invalid dates (1970-01-01) while sample data shows valid future dates. Prioritize cleaning 'Brand Name' and 'Property Name' to enable meaningful segmentation, as they have >75% missing values."
-  },
-  "insights": [
-    "The 'Nature of Services' is heavily skewed towards 'Local' (77.42%) compared to 'Export' (21.62%), with very few 'Exempt' transactions. This suggests the primary revenue base is domestic, which may have different tax and collection implications.",
-    "The 'Department' distribution shows 'PAYROLL' (35.25%) and 'SOFTWARE' (33.13%) as the dominant service areas. This indicates a diversified service portfolio, but also suggests that collection strategies might need to be tailored differently for payroll vs. software services.",
-    "The 'Balance Collection Amount' column contains only negative values and zeros, with a mean of -5,881.63. This is unusual for a collection metric and suggests it might represent deductions, credits, or net adjustments rather than gross cash inflows. This requires clarification to accurately assess cash flow health.",
-    "High-cardinality columns like 'Client Name' (1,202 unique values) and 'Invoice No' (4,198 unique values) act as identifiers rather than analytical dimensions. Aggregating by 'Group' or 'Company Group' provides more actionable insights for executive review."
-  ],
-  "recommendations": [
-    "Clarify the definition and calculation of 'Balance Collection Amount' to determine if it represents net collections, credits, oradjustments. If it is not gross collections, a true collection metric should be derived or added.",
-    "Investigate the 'Invoice Date' data integrity issue. If the dates are valid in the source but parsed incorrectly in the statistics, correct the parsing to enable accurate time-series analysis of invoicing patterns.",
-    "Improve data completeness for 'Brand Name' and 'Property Name'. If these fields are critical for performance analysis, implementdata entry validation or automated mapping to reduce the >75% missing rate.",
-    "Use 'Group' or 'Company Group' as primary segmentation dimensions for executive dashboards, as they have low cardinality and lowmissingness, providing clear strategic views."
-  ],
-  "filters": [
-    {
-      "column": "Group",
-      "filter_type": "dropdown",
-      "label": "Client Group"
-    },
-    {
-      "column": "Department",
-      "filter_type": "dropdown",
-      "label": "Service Department"
-    },
-    {
-      "column": "Nature of Services",
-      "filter_type": "dropdown",
-      "label": "Service Nature"
-    }
-  ],
-  "kpis": [
-    {
-      "metric": "Invoice Amount",
-      "aggregation": "sum",
-      "label": "Total Invoiced Amount"
-    },
-    {
-      "metric": "Balance Amount",
-      "aggregation": "sum",
-      "label": "Total Outstanding Balance"
-    },
-    {
-      "metric": "Invoice No",
-      "aggregation": "count",
-      "label": "Total Invoices"
-    },
-    {
-      "metric": "Due Days",
-      "aggregation": "mean",
-      "label": "Average Due Days"
-    }
-  ],
-  "charts": [
-    {
-      "chart_id": "chart-0",
-      "type": "bar",
-      "x": "Group",
-      "y": "Invoice Amount",
-      "title": "Total Invoiced Amount by Client Group",
-      "size": "1/2"
-    },
-    {
-      "chart_id": "chart-1",
-      "type": "bar",
-      "x": "Department",
-      "y": "Invoice Amount",
-      "title": "Total Invoiced Amount by Department",
-      "size": "1/2"
-    },
-    {
-      "chart_id": "chart-2",
-      "type": "pie",
-      "x": "Nature of Services",
-      "y": "Invoice Amount",
-      "title": "Distribution of Invoiced Amount by Service Nature",
-      "size": "1/2"
-    },
-    {
-      "chart_id": "chart-3",
-      "type": "bar",
-      "x": "Company Group",
-      "y": "Balance Amount",
-      "title": "Outstanding Balance by Company Group",
-      "size": "1/2"
-    },
-    {
-      "chart_id": "chart-4",
-      "type": "histogram",
-      "x": "Invoice Amount",
-      "y": null,
-      "title": "Distribution of Invoice Amounts",
-      "size": "1/2"
-    }
-  ],
-  "layout_grid": "2-col",
-  "narrative": "This dashboard provides an overview of invoicing and balance status across client groups and service departments. Thedata reveals a high total invoiced value with a significant outstanding balance, highlighting potential cash flow concerns. The heavyskew in 'Invoice Amount' suggests that a few large invoices drive the total, while the majority of invoices are smaller. Data qualityissues, particularly in 'Brand Name' and 'Property Name', limit granular analysis. The 'Balance Collection Amount' column requires clarification as its negative values suggest it may not represent gross collections. Users should focus on 'Group' and 'Department' for strategic segmentation and investigate the 'Invoice Date' parsing error for accurate temporal analysis."
-}
-=======================
+                date_series = pd.to_datetime(
+                    series,
+                    errors="coerce"
+                ).dropna()
 
-FILTER RAW: {'column': 'Group', 'filter_type': 'dropdown', 'label': 'Client Group'}
-FILTER RAW: {'column': 'Department', 'filter_type': 'dropdown', 'label': 'Service Department'}
-FILTER RAW: {'column': 'Nature of Services', 'filter_type': 'dropdown', 'label': 'Service Nature'}
-KPI RAW: {'metric': 'Invoice Amount', 'aggregation': 'sum', 'label': 'Total Invoiced Amount'}
-KPI RAW: {'metric': 'Balance Amount', 'aggregation': 'sum', 'label': 'Total Outstanding Balance'}
-KPI RAW: {'metric': 'Invoice No', 'aggregation': 'count', 'label': 'Total Invoices'}
-KPI RAW: {'metric': 'Due Days', 'aggregation': 'mean', 'label': 'Average Due Days'}
-CHART RAW: {'chart_id': 'chart-0', 'type': 'bar', 'x': 'Group', 'y': 'Invoice Amount', 'title': 'Total Invoiced Amount by Client Group', 'size': '1/2'}
-CHART RAW: {'chart_id': 'chart-1', 'type': 'bar', 'x': 'Department', 'y': 'Invoice Amount', 'title': 'Total Invoiced Amount by Department', 'size': '1/2'}
-CHART RAW: {'chart_id': 'chart-2', 'type': 'pie', 'x': 'Nature of Services', 'y': 'Invoice Amount', 'title': 'Distribution of Invoiced Amount by Service Nature', 'size': '1/2'}
-CHART RAW: {'chart_id': 'chart-3', 'type': 'bar', 'x': 'Company Group', 'y': 'Balance Amount', 'title': 'Outstanding Balance by Company Group', 'size': '1/2'}
-CHART RAW: {'chart_id': 'chart-4', 'type': 'histogram', 'x': 'Invoice Amount', 'y': None, 'title': 'Distribution of Invoice Amounts','size': '1/2'}
+                if len(date_series) > 0:
 
-====FINAL CONFIG====
-Filters: 3
-KPIs: 4
-Charts: 5
-=======================
+                    col_info.update({
+                        "min_date": str(date_series.min().date()),
+                        "max_date": str(date_series.max().date()),
+                        "date_span_days": int(
+                            (date_series.max() - date_series.min()).days
+                        )
+                    })
 
-STEP 7 - AFTER ANALYZE
-<class 'core.config.DashboardConfig'>
-DashboardConfig(filters=[FilterConfig(column='Group', filter_type='dropdown', label='Client Group', default_value=None), FilterConfig(column='Department', filter_type='dropdown', label='Service Department', default_value=None), FilterConfig(column='Nature of Services', filter_type='dropdown', label='Service Nature', default_value=None)], kpis=[KPIConfig(metric='Invoice Amount', aggregation='sum', label='Total Invoiced Amount', color='#1A365D', bg_color='#EFF6FF'), KPIConfig(metric='Balance Amount', aggregation='sum', label='TotalOutstanding Balance', color='#1A365D', bg_color='#EFF6FF'), KPIConfig(metric='Invoice No', aggregation='count', label='Total Invoices', color='#1A365D', bg_color='#EFF6FF'), KPIConfig(metric='Due Days', aggregation='mean', label='Average Due Days', color='#1A365D', bg_color='#EFF6FF')], charts=[ChartConfig(chart_id='chart-0', chart_type='bar', x_column='Group', y_column='Invoice Amount', groupby_column=None, size='1/2', aggregation='sum', title='Total Invoiced Amount by Client Group'), ChartConfig(chart_id='chart-1', chart_type='bar', x_column='Department', y_column='Invoice Amount', groupby_column=None, size='1/2', aggregation='sum', title='Total Invoiced Amount by Department'), ChartConfig(chart_id='chart-2', chart_type='pie', x_column='Nature of Services', y_column='Invoice Amount', groupby_column=None, size='1/2', aggregation='sum', title='Distribution of Invoiced Amount by Service Nature'), ChartConfig(chart_id='chart-3', chart_type='bar', x_column='Company Group', y_column='Balance Amount', groupby_column=None, size='1/2', aggregation='sum', title='Outstanding Balance by Company Group'), ChartConfig(chart_id='chart-4', chart_type='histogram', x_column='Invoice Amount', y_column=None, groupby_column=None, size='1/2', aggregation='sum', title='Distribution of Invoice Amounts')], layout_grid='2-col', reasoning="This dashboard provides an overview of invoicing and balance status across client groups and service departments. The data reveals a hightotal invoiced value with a significant outstanding balance, highlighting potential cash flow concerns. The heavy skew in 'Invoice Amount' suggests that a few large invoices drive the total, while the majority of invoices are smaller. Data quality issues, particularly in 'Brand Name' and 'Property Name', limit granular analysis. The 'Balance Collection Amount' column requires clarification as its negative values suggest it may not represent gross collections. Users should focus on 'Group' and 'Department' for strategic segmentation and investigate the 'Invoice Date' parsing error for accurate temporal analysis.")
-RESULT DIR
-['__annotations__', '__class__', '__dataclass_fields__', '__dataclass_params__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__match_args__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'ai_analysis', 'charts', 'filters', 'kpis', 'layout_grid', 'reasoning', 'to_dict']
-TO DICT
-{'filters': [{'column': 'Group', 'filter_type': 'dropdown', 'label': 'Client Group'}, {'column': 'Department', 'filter_type': 'dropdown', 'label': 'Service Department'}, {'column': 'Nature of Services', 'filter_type': 'dropdown', 'label': 'Service Nature'}], 'kpis': [{'metric': 'Invoice Amount', 'aggregation': 'sum', 'label': 'Total Invoiced Amount'}, {'metric': 'Balance Amount', 'aggregation': 'sum', 'label': 'Total Outstanding Balance'}, {'metric': 'Invoice No', 'aggregation': 'count', 'label': 'Total Invoices'}, {'metric': 'Due Days', 'aggregation': 'mean', 'label': 'Average Due Days'}], 'charts': [{'chart_id': 'chart-0', 'chart_type': 'bar', 'x': 'Group', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-1', 'chart_type': 'bar', 'x': 'Department', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-2', 'chart_type': 'pie', 'x':'Nature of Services', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-3', 'chart_type': 'bar', 'x': 'Company Group', 'y': 'Balance Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-4', 'chart_type': 'histogram', 'x': 'Invoice Amount', 'y': None, 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}], 'layout_grid': '2-col', 'reasoning': "This dashboard provides an overview of invoicing and balance status across client groups and service departments. The data reveals a high total invoiced value with a significant outstanding balance, highlighting potential cash flow concerns. Theheavy skew in 'Invoice Amount' suggests that a few large invoices drive the total, while the majority of invoices are smaller. Data quality issues, particularly in 'Brand Name' and 'Property Name', limit granular analysis. The 'Balance Collection Amount' column requires clarification as its negative values suggest it may not represent gross collections. Users should focus on 'Group' and 'Department' for strategic segmentation and investigate the 'Invoice Date' parsing error for accurate temporal analysis.", 'ai_analysis': {'executive_summary': {'key_findings': ['The dataset contains 4,205 invoice records with a total invoiced value of approximately 242.98 million. The mean invoice amount is 57,838.55, but the median is significantly lower at 23,010.00, indicating a right-skewed distribution where a small number of high-value invoices drive the total volume.', "There is a significant discrepancy between total invoiced amounts and collected balances. The sum of 'Balance Collection Amount' is negative (-24.69 million), while the 'Balance Amount' sums to 218.06 million. This suggests that the 'Balance Collection Amount' column may represent net adjustments, credits, or specific collection events rather than gross collections, or that a substantial portion of invoiced revenue remains outstanding.", "Data quality is compromised by high missingness in key descriptive fields. 'Brand Name' has 98.12% missing values, 'Property Name' has 77.31% missing values,and 'Marsha' has 57.62% missing values. These gaps limit the ability to segment performance by brand or specific property location effectively."], 'data_quality_score': 0.65, 'overall_health': 'Caution', 'missing_data_pct': 12.4, 'reliability': 'Medium'}, 'trends': [{'column': 'Invoice Date', 'direction': 'insufficient_evidence', 'growth_rate': None, 'evidence': "The dataset statistics indicate that the 'Invoice Date' column has a min and max date of '1970-01-01' with a span of 0 days, despite the sample data showing valid dates in 2025-2026. This suggests a data parsing or storage error in the statistical summary, making trend analysis unreliable based on the provided statistics."}], 'data_quality': {'missing_values': {'Brand Name': 98.12, 'Property Name': 77.31, 'Marsha': 57.62, 'Unnamed: 18': 79.5, 'Nature of Services': 8.25, 'Revenue Head': 8.25, 'Contact Person Name': 8.7, 'Project MID': 10.15}, 'outliers_detected': False, 'data_completeness': 0.876, 'recommendation': "Investigate the 'Invoice Date' column for parsing errors, as the statistical summary shows invalid dates (1970-01-01) while sample data shows valid future dates. Prioritize cleaning 'Brand Name' and 'Property Name' to enable meaningful segmentation, as they have >75% missing values."}, 'insights': ["The 'Nature of Services' is heavily skewed towards 'Local' (77.42%) compared to 'Export' (21.62%), with very few 'Exempt' transactions. This suggests the primary revenue base is domestic, which may have different tax and collection implications.", "The 'Department' distribution shows 'PAYROLL' (35.25%) and 'SOFTWARE' (33.13%) as the dominant service areas. This indicates a diversified service portfolio, but also suggests that collection strategiesmight need to be tailored differently for payroll vs. software services.", "The 'Balance Collection Amount' column contains only negative values and zeros, with a mean of -5,881.63. This is unusual for a collection metric and suggests it might represent deductions, credits, or net adjustments rather than gross cash inflows. This requires clarification to accurately assess cash flow health.", "High-cardinality columns like 'Client Name' (1,202 unique values) and 'Invoice No' (4,198 unique values) act as identifiers rather than analytical dimensions. Aggregating by 'Group' or 'Company Group' provides more actionable insights for executive review."], 'recommendations': ["Clarify the definition and calculation of 'Balance Collection Amount' to determine if it represents net collections, credits, or adjustments. If it is not gross collections, a true collection metric should be derived or added.", "Investigate the 'Invoice Date'data integrity issue. If the dates are valid in the source but parsed incorrectly in the statistics, correct the parsing to enable accurate time-series analysis of invoicing patterns.", "Improve data completeness for 'Brand Name' and 'Property Name'. If these fields are critical for performance analysis, implement data entry validation or automated mapping to reduce the >75% missing rate.", "Use 'Group' or 'Company Group' as primary segmentation dimensions for executive dashboards, as they have low cardinality and low missingness, providing clear strategic views."], 'filters': [{'column': 'Group', 'filter_type': 'dropdown', 'label': 'Client Group'}, {'column': 'Department', 'filter_type': 'dropdown', 'label': 'Service Department'}, {'column': 'Nature of Services', 'filter_type': 'dropdown', 'label': 'Service Nature'}], 'kpis': [{'metric': 'Invoice Amount', 'aggregation': 'sum', 'label': 'Total Invoiced Amount'}, {'metric': 'Balance Amount', 'aggregation': 'sum', 'label': 'Total Outstanding Balance'}, {'metric': 'Invoice No', 'aggregation': 'count', 'label': 'Total Invoices'}, {'metric': 'Due Days', 'aggregation': 'mean', 'label': 'Average Due Days'}], 'charts': [{'chart_id': 'chart-0', 'type': 'bar', 'x': 'Group', 'y': 'Invoice Amount', 'title': 'Total Invoiced Amount by Client Group', 'size': '1/2'}, {'chart_id': 'chart-1', 'type': 'bar', 'x': 'Department', 'y': 'Invoice Amount', 'title': 'Total Invoiced Amount by Department', 'size': '1/2'}, {'chart_id': 'chart-2', 'type': 'pie', 'x': 'Nature of Services', 'y': 'Invoice Amount', 'title': 'Distribution of Invoiced Amount by Service Nature', 'size': '1/2'}, {'chart_id': 'chart-3', 'type': 'bar', 'x': 'Company Group', 'y': 'Balance Amount', 'title': 'Outstanding Balance by Company Group', 'size': '1/2'}, {'chart_id': 'chart-4', 'type': 'histogram', 'x': 'Invoice Amount', 'y': None, 'title': 'Distribution of Invoice Amounts', 'size': '1/2'}], 'layout_grid': '2-col', 'narrative': "This dashboard provides an overview of invoicing and balance status across client groups and service departments. The data reveals a high total invoiced value with a significant outstanding balance, highlighting potential cash flow concerns. The heavy skew in 'Invoice Amount' suggests that a few large invoices drive the total, while the majority of invoices are smaller. Data quality issues, particularly in 'Brand Name' and 'Property Name', limitgranular analysis. The 'Balance Collection Amount' column requires clarification as its negative values suggest it may not represent gross collections. Users should focus on 'Group' and 'Department' for strategic segmentation and investigate the 'Invoice Date' parsing error for accurate temporal analysis."}}
-RETURNING TO STORE:
-<class 'str'>
-This dashboard provides an overview of invoicing and balance status across client groups and service departments. The data reveals a high total invoiced value with a significant outstanding balance, highlighting potential cash flow concerns. The heavy skew in 'Invoice Amount' suggests that a few large invoices drive the total, while the majority of invoices are smaller. Data quality issues, particularly in 'Brand Name' and 'Property Name', limit granular analysis. The 'Balance Collection Amount' column requires clarification as its negative values suggest it may not represent gross collections. Users should focus on 'Group' and 'Department' for strategic segmentation and investigate the 'Invoice Date' parsing error for accurate temporal analysis.
-RETURN TYPE: <class 'dict'>
-STORE DATA {'filters': [{'column': 'Group', 'filter_type': 'dropdown', 'label': 'Client Group'}, {'column': 'Department', 'filter_type': 'dropdown', 'label': 'Service Department'}, {'column': 'Nature of Services', 'filter_type': 'dropdown', 'label': 'Service Nature'}], 'kpis': [{'metric': 'Invoice Amount', 'aggregation': 'sum', 'label': 'Total Invoiced Amount'}, {'metric': 'Balance Amount', 'aggregation': 'sum', 'label': 'Total Outstanding Balance'}, {'metric': 'Invoice No', 'aggregation': 'count', 'label': 'Total Invoices'}, {'metric': 'Due Days', 'aggregation': 'mean', 'label': 'Average Due Days'}], 'charts': [{'chart_id': 'chart-0', 'chart_type': 'bar', 'x':'Group', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-1', 'chart_type': 'bar', 'x': 'Department', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-2', 'chart_type': 'pie', 'x': 'Nature of Services', 'y': 'Invoice Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-3', 'chart_type': 'bar', 'x': 'Company Group', 'y': 'Balance Amount', 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}, {'chart_id': 'chart-4', 'chart_type': 'histogram', 'x': 'Invoice Amount', 'y': None, 'groupby': None, 'aggregation': 'sum', 'size': '1/2'}], 'layout_grid': '2-col', 'reasoning': "This dashboard provides an overview of invoicing and balance status across client groups and servicedepartments. The data reveals a high total invoiced value with a significant outstanding balance, highlighting potential cash flow concerns. The heavy skew in 'Invoice Amount' suggests that a few large invoices drive the total, while the majority of invoices are smaller. Data quality issues, particularly in 'Brand Name' and 'Property Name', limit granular analysis. The 'Balance Collection Amount' column requires clarification as its negative values suggest it may not represent gross collections. Users should focus on 'Group' and 'Department' for strategic segmentation and investigate the 'Invoice Date' parsing error for accurate temporal analysis.", 'ai_analysis': {'executive_summary': {'key_findings': ['The dataset contains 4,205 invoice records with a total invoiced value of approximately 242.98 million. The mean invoice amount is 57,838.55, but the median is significantly lower at 23,010.00, indicating a right-skewed distribution where a small number of high-value invoices drive the total volume.', "There is a significant discrepancy between total invoiced amounts and collected balances. The sum of 'Balance Collection Amount' is negative (-24.69 million), while the 'Balance Amount' sums to 218.06 million. This suggests that the 'Balance Collection Amount' column may represent net adjustments, credits, or specific collection events rather than gross collections, or that a substantial portion of invoiced revenue remains outstanding.", "Data qualityis compromised by high missingness in key descriptive fields. 'Brand Name' has 98.12% missing values, 'Property Name' has 77.31% missing values, and 'Marsha' has 57.62% missing values. These gaps limit the ability to segment performance by brand or specific property location effectively."], 'data_quality_score': 0.65, 'overall_health': 'Caution', 'missing_data_pct': 12.4, 'reliability': 'Medium'}, 'trends': [{'column': 'Invoice Date', 'direction': 'insufficient_evidence', 'growth_rate': None, 'evidence': "The dataset statistics indicate that the 'Invoice Date' column has a min and max date of '1970-01-01' with a span of 0 days, despite the sample data showing valid dates in 2025-2026. This suggests a data parsing or storage error in the statistical summary, making trend analysis unreliable based on the provided statistics."}], 'data_quality': {'missing_values': {'Brand Name': 98.12, 'Property Name': 77.31, 'Marsha': 57.62, 'Unnamed: 18': 79.5, 'Nature of Services': 8.25, 'Revenue Head': 8.25, 'Contact Person Name': 8.7, 'Project MID': 10.15}, 'outliers_detected': False, 'data_completeness': 0.876, 'recommendation': "Investigate the 'Invoice Date' column for parsing errors, as the statistical summary shows invalid dates (1970-01-01) while sample data shows valid future dates. Prioritize cleaning 'Brand Name' and 'Property Name' to enable meaningful segmentation, as they have >75% missing values."}, 'insights': ["The 'Nature of Services' is heavily skewed towards 'Local' (77.42%) compared to 'Export' (21.62%), with very few 'Exempt' transactions. This suggests the primary revenue base is domestic, which may have different tax and collection implications.", "The 'Department' distribution shows 'PAYROLL' (35.25%) and 'SOFTWARE' (33.13%) as the dominant service areas. This indicates a diversified service portfolio, but also suggests that collectionstrategies might need to be tailored differently for payroll vs. software services.", "The 'Balance Collection Amount' column contains only negative values and zeros, with a mean of -5,881.63. This is unusual for a collection metric and suggests it might represent deductions, credits, or net adjustments rather than gross cash inflows. This requires clarification to accurately assess cash flow health.", "High-cardinality columns like 'Client Name' (1,202 unique values) and 'Invoice No' (4,198 unique values) act as identifiers rather than analytical dimensions. Aggregating by 'Group' or 'Company Group' provides more actionable insights for executive review."], 'recommendations': ["Clarify the definition and calculation of 'Balance Collection Amount' to determine if it represents net collections, credits, or adjustments. If it is not gross collections, a true collection metric should be derived or added.", "Investigate the 'Invoice Date' data integrity issue. If the dates are valid in the source but parsed incorrectly in the statistics, correct the parsing to enable accurate time-series analysis of invoicing patterns.", "Improve data completeness for 'Brand Name' and 'Property Name'. If these fields are critical for performance analysis, implement data entry validation or automated mapping to reduce the >75% missing rate.", "Use 'Group' or 'Company Group' as primary segmentation dimensions for executive dashboards, as they have low cardinality and low missingness, providing clear strategic views."], 'filters': [{'column': 'Group', 'filter_type': 'dropdown', 'label': 'Client Group'}, {'column': 'Department', 'filter_type': 'dropdown', 'label': 'Service Department'}, {'column': 'Nature of Services', 'filter_type': 'dropdown', 'label': 'Service Nature'}], 'kpis': [{'metric': 'Invoice Amount', 'aggregation': 'sum', 'label': 'Total Invoiced Amount'}, {'metric': 'Balance Amount', 'aggregation': 'sum', 'label': 'Total Outstanding Balance'}, {'metric': 'Invoice No', 'aggregation': 'count', 'label': 'Total Invoices'}, {'metric': 'Due Days', 'aggregation': 'mean', 'label': 'Average Due Days'}], 'charts': [{'chart_id': 'chart-0', 'type': 'bar', 'x': 'Group', 'y': 'Invoice Amount', 'title': 'Total Invoiced Amount by Client Group', 'size': '1/2'}, {'chart_id': 'chart-1', 'type': 'bar', 'x': 'Department', 'y': 'Invoice Amount', 'title': 'Total Invoiced Amount by Department', 'size': '1/2'}, {'chart_id': 'chart-2', 'type': 'pie', 'x': 'Nature of Services', 'y': 'Invoice Amount', 'title': 'Distribution of Invoiced Amount by Service Nature', 'size': '1/2'}, {'chart_id': 'chart-3', 'type': 'bar', 'x': 'Company Group', 'y': 'Balance Amount', 'title': 'Outstanding Balance by Company Group', 'size': '1/2'}, {'chart_id': 'chart-4', 'type': 'histogram', 'x': 'Invoice Amount', 'y': None, 'title': 'Distribution of Invoice Amounts', 'size': '1/2'}], 'layout_grid': '2-col', 'narrative': "This dashboard provides an overview of invoicing and balance status across client groups and service departments. The data reveals a high total invoiced value with a significant outstanding balance, highlighting potential cash flow concerns. The heavy skew in 'Invoice Amount' suggests that a few large invoices drive the total, while the majority of invoices are smaller. Data quality issues, particularly in 'Brand Name' and 'Property Name', limit granular analysis. The 'Balance Collection Amount' column requires clarification as its negative values suggest it may notrepresent gross collections. Users should focus on 'Group' and 'Department' for strategic segmentation and investigate the 'Invoice Date' parsing error for accurate temporal analysis."}}
+            # --------------------------------------------------------
+            # CATEGORICAL COLUMN
+            # --------------------------------------------------------
+            elif dtype == "categorical":
 
+                # Avoid sending thousands of category values to the LLM.
+                # Only send the top 5.
+                top_values = (
+                    series
+                    .dropna()
+                    .astype(str)
+                    .value_counts()
+                    .head(5)
+                )
+
+                col_info["top_values"] = [
+                    {
+                        "value": str(value),
+                        "count": int(count),
+                        "percentage": round(
+                            float(count / len(series.dropna()) * 100), 2
+                        )
+                    }
+                    for value, count in top_values.items()
+                ]
+
+            summary["column_details"][col] = col_info
+
+        print("STEP 5 - DATASET SUMMARY CREATED")
+        print("ROWS:", summary["row_count"])
+        print("COLUMNS:", summary["column_count"])
+
+        for col, info in summary["column_details"].items():
+            print(
+                f"{col} -> "
+                f"dtype={info.get('dtype')}, "
+                f"missing={info.get('missing_pct')}%, "
+                f"unique={info.get('unique_count')}"
+            )
+    
+        if llm_analyzer:
+            print("STEP 6 - BEFORE ANALYZE")
+            result = llm_analyzer.analyze(df, profiles, objective or "", dataset_summary=summary)
+            print("STEP 7 - AFTER ANALYZE")
+            print(type(result))
+            print(result)
+            
+            print("RESULT DIR")
+            print(dir(result))
+            
+            print("TO DICT")
+            print(result.to_dict())
+            
+            print("RETURNING TO STORE:")
+            print(type(result.reasoning if result else " "))
+            print(result.reasoning if result else " ")
+            
+            print("RETURN TYPE:", type(result.to_dict()))
+            print("STORE DATA", result.to_dict())
+            
+            return( html.Div([
+                    html.H5("AI Suggestions"),
+                    html.Div(result.reasoning if result else "No suggestions generated", 
+                        style={
+                        'whiteSpace': 'pre-wrap',
+                        'background': '#F7FAFC',
+                        'padding': '10px',
+                        'borderRadius': '6px'
+                    })
+                ]), 
+                    result.to_dict() if result else {}
+            )           
+        else:
+            print("STEP X - LLM IS NONE")
+            return dbc.Alert("LLM not initialized", color="danger"), None
+        
+    except Exception as e:
+        print("READ_JSON ERROR")
+        print(type(e).__name__)
+        print(str(e))
+        return dbc.Alert(f"AI Error: {type(e).__name__}: {str(e)}", color="danger"), None
