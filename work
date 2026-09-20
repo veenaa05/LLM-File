@@ -1,1 +1,130 @@
+# ============================================================
+# FIX MALFORMED EFFECTIVE START DATES
+# ============================================================
+
+bad_effective_mask = (
+    employee_master["Effective Start Date"] < pd.Timestamp("2000-01-01")
+)
+
+print(
+    "Malformed Effective Start Date records:",
+    bad_effective_mask.sum()
+)
+
+# For these records, the Effective Start Date is clearly
+# intended to match the Actual Join Date.
+employee_master.loc[
+    bad_effective_mask,
+    "Effective Start Date"
+] = employee_master.loc[
+    bad_effective_mask,
+    "Actual Join Date"
+]
+
+print("\nAfter correction:")
+
+print(
+    "Minimum Effective Start Date:",
+    employee_master["Effective Start Date"].min()
+)
+
+print(
+    "Maximum Effective Start Date:",
+    employee_master["Effective Start Date"].max()
+)
+
+print(
+    "Remaining dates before 2000:",
+    (
+        employee_master["Effective Start Date"]
+        < pd.Timestamp("2000-01-01")
+    ).sum()
+)
+
+
+
+/////////:
+# ============================================================
+# CREATE ONE CURRENT RECORD PER EMPLOYEE
+# ============================================================
+
+employee_master_clean = employee_master.copy()
+
+# Sort so that the latest effective record is retained.
+# NaT resignation dates are placed last, which is useful
+# for currently active employees.
+employee_master_clean = (
+    employee_master_clean
+    .sort_values(
+        [
+            "Employee Code",
+            "Effective Start Date",
+            "Resignation Date"
+        ],
+        na_position="last"
+    )
+    .drop_duplicates(
+        subset="Employee Code",
+        keep="last"
+    )
+    .copy()
+)
+
+print("Original rows:", len(employee_master))
+print("Clean rows:", len(employee_master_clean))
+print(
+    "Unique Employee Codes:",
+    employee_master_clean["Employee Code"].nunique()
+)
+
+print(
+    "Remaining duplicate Employee Codes:",
+    employee_master_clean["Employee Code"].duplicated().sum()
+)
+/////////:
+
+# ============================================================
+# VALIDATE CLEAN EMPLOYEE MASTER
+# ============================================================
+
+print("=== CLEAN EMPLOYEE MASTER ===")
+
+print("Shape:", employee_master_clean.shape)
+
+print(
+    "Unique Employee Codes:",
+    employee_master_clean["Employee Code"].nunique()
+)
+
+print("\n=== EMPLOYEE STATUS ===")
+print(
+    employee_master_clean["Employee Status"]
+    .value_counts(dropna=False)
+)
+
+print("\n=== GENDER ===")
+print(
+    employee_master_clean["Gender"]
+    .value_counts(dropna=False)
+)
+
+print("\n=== RELIGION ===")
+print(
+    employee_master_clean["Religion"]
+    .value_counts(dropna=False)
+)
+
+print("\n=== DATE RANGES ===")
+
+for col in [
+    "Actual Join Date",
+    "Effective Start Date",
+    "Resignation Date",
+    "Birth Date"
+]:
+    print(
+        f"{col:25} "
+        f"Min: {employee_master_clean[col].min()} | "
+        f"Max: {employee_master_clean[col].max()}"
+    )
 
