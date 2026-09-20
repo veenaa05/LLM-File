@@ -1,1 +1,60 @@
+# Check duplicate Employee Codes
+
+duplicate_codes = (
+    employee_master[
+        employee_master["Employee Code"].duplicated(keep=False)
+    ]
+    .sort_values("Employee Code")
+)
+
+print("Duplicate Employee Code rows:", len(duplicate_codes))
+print(
+    "Duplicate Employee Codes:",
+    duplicate_codes["Employee Code"].nunique()
+)
+
+display(
+    duplicate_codes[
+        [
+            "Employee Code",
+            "Employee Name",
+            "Gender",
+            "Religion",
+            "Employee Status",
+            "Actual Join Date",
+            "Resignation Date",
+            "Last Working Date",
+            "Effective Start Date",
+            "Effective End Date"
+        ]
+    ]
+)
+////:://
+print("=== EFFECTIVE DATE AVAILABILITY ===")
+
+for col in [
+    "Effective Start Date",
+    "Effective End Date"
+]:
+    print(
+        f"{col}:",
+        employee_master[col].notna().sum(),
+        "available |",
+        employee_master[col].isna().sum(),
+        "missing"
+    )
+
+print("\n=== EFFECTIVE DATE RANGE ===")
+
+for col in [
+    "Effective Start Date",
+    "Effective End Date"
+]:
+    print(
+        col,
+        "Min:", employee_master[col].min(),
+        "Max:", employee_master[col].max()
+    )
+
+
 
