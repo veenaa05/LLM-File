@@ -1,1 +1,396 @@
+# ============================================================
+# PREPARE DATA FOR MONTHLY DIVERSITY ANALYSIS
+# ============================================================
 
+active_df = employee_master_clean.copy()
+
+# Make sure required columns are datetime
+date_cols = [
+    "Actual Join Date",
+    "Resignation Date",
+    "Last Working Date",
+    "Birth Date"
+]
+
+for col in date_cols:
+    active_df[col] = pd.to_datetime(
+        active_df[col],
+        errors="coerce"
+    )
+
+print("Active Data Shape:", active_df.shape)
+print(
+    "Unique Employees:",
+    active_df["Employee Code"].nunique()
+)
+
+print("\nRequired columns missing:")
+for col in [
+    "Employee Code",
+    "Gender",
+    "Religion",
+    "Birth Date",
+    "Actual Join Date",
+    "Resignation Date",
+    "Last Working Date"
+]:
+    print(
+        col,
+        "->",
+        active_df[col].isna().sum(),
+        "missing"
+    )
+
+////::/:::
+# ============================================================
+# CREATE MONTHLY DIVERSITY HISTORY
+# ============================================================
+
+monthly_diversity = []
+
+for month_end in monthly_dates:
+
+    # ========================================================
+    # 1. EMPLOYEE MUST HAVE JOINED BY THIS MONTH
+    # ========================================================
+
+    joined = (
+        active_df["Actual Join Date"].notna()
+        &
+        (
+            active_df["Actual Join Date"]
+            <= month_end
+        )
+    )
+
+    # ========================================================
+    # 2. EMPLOYEE SHOULD NOT HAVE RESIGNED BEFORE MONTH END
+    # ========================================================
+
+    resigned = (
+        active_df["Resignation Date"].notna()
+        &
+        (
+            active_df["Resignation Date"]
+            <= month_end
+        )
+    )
+
+    # ========================================================
+    # 3. EMPLOYEE SHOULD NOT HAVE LAST WORKING DATE
+    #    BEFORE / ON MONTH END
+    # ========================================================
+
+    left_company = (
+        active_df["Last Working Date"].notna()
+        &
+        (
+            active_df["Last Working Date"]
+            <= month_end
+        )
+    )
+
+    # ========================================================
+    # ACTIVE EMPLOYEES AS OF MONTH END
+    # ========================================================
+
+    active_mask = (
+        joined
+        &
+        ~resigned
+        &
+        ~left_company
+    )
+
+    month_df = active_df.loc[
+        active_mask
+    ].copy()
+
+    # ========================================================
+    # CALCULATE AGE AS OF MONTH END
+    # ========================================================
+
+    month_df["Age"] = calculate_age(
+        month_df["Birth Date"],
+        month_end
+    )
+
+    # ========================================================
+    # GENDER
+    # ========================================================
+
+    gender = (
+        month_df["Gender"]
+        .astype("string")
+        .str.strip()
+        .str.lower()
+    )
+
+    male_count = (
+        gender == "male"
+    ).sum()
+
+    female_count = (
+        gender == "female"
+    ).sum()
+
+    other_gender_count = (
+        ~gender.isin([
+            "male",
+            "female"
+        ])
+        & gender.notna()
+    ).sum()
+
+    # ========================================================
+    # RELIGION
+    # ========================================================
+
+    religion = (
+        month_df["Religion"]
+        .astype("string")
+        .str.strip()
+        .str.lower()
+    )
+
+    hindu_count = (
+        religion == "hinduism"
+    ).sum()
+
+    muslim_count = (
+        religion.isin([
+            "islam",
+            "muslim"
+        ])
+    ).sum()
+
+    christian_count = (
+        religion.isin([
+            "christianity",
+            "christian"
+        ])
+    ).sum()
+
+    other_religion_count = (
+        religion.notna()
+        &
+        ~religion.isin([
+            "hinduism",
+            "islam",
+            "muslim",
+            "christianity",
+            "christian"
+        ])
+    ).sum()
+
+    # ========================================================
+    # AGE GROUPS
+    # ========================================================
+
+    age_below_25 = (
+        month_df["Age"] < 25
+    ).sum()
+
+    age_25_35 = (
+        (month_df["Age"] >= 25)
+        &
+        (month_df["Age"] < 35)
+    ).sum()
+
+    age_35_50 = (
+        (month_df["Age"] >= 35)
+        &
+        (month_df["Age"] <= 50)
+    ).sum()
+
+    age_above_50 = (
+        month_df["Age"] > 50
+    ).sum()
+
+    # ========================================================
+    # SAVE MONTH
+    # ========================================================
+
+    monthly_diversity.append({
+
+        "ds": month_end,
+
+        "Total Employees": len(month_df),
+
+        "Male": male_count,
+        "Female": female_count,
+        "Other Gender": other_gender_count,
+
+        "Hinduism": hindu_count,
+        "Muslim": muslim_count,
+        "Christian": christian_count,
+        "Other Religion": other_religion_count,
+
+        "Age Below 25": age_below_25,
+        "Age 25-35": age_25_35,
+        "Age 35-50": age_35_50,
+        "Age Above 50": age_above_50
+    })
+
+
+# ============================================================
+# CONVERT TO DATAFRAME
+# ============================================================
+
+monthly_diversity = pd.DataFrame(
+    monthly_diversity
+)
+
+monthly_diversity["ds"] = pd.to_datetime(
+    monthly_diversity["ds"]
+)
+
+print("Monthly Diversity Shape:")
+print(monthly_diversity.shape)
+
+display(monthly_diversity.head())
+
+
+
+///////
+
+# ============================================================
+# CHECK RECENT MONTHS
+# ============================================================
+
+display(
+    monthly_diversity.tail(12)
+)
+
+
+
+////:/
+# ============================================================
+# GENDER VALIDATION
+# ============================================================
+
+monthly_diversity["Gender Total"] = (
+    monthly_diversity["Male"]
+    + monthly_diversity["Female"]
+    + monthly_diversity["Other Gender"]
+)
+
+gender_check = monthly_diversity[
+    [
+        "ds",
+        "Total Employees",
+        "Male",
+        "Female",
+        "Other Gender",
+        "Gender Total"
+    ]
+].copy()
+
+gender_check["Difference"] = (
+    gender_check["Total Employees"]
+    - gender_check["Gender Total"]
+)
+
+display(
+    gender_check.tail(12)
+)
+
+
+///////
+# ============================================================
+# AGE GROUP VALIDATION
+# ============================================================
+
+monthly_diversity["Age Total"] = (
+    monthly_diversity["Age Below 25"]
+    + monthly_diversity["Age 25-35"]
+    + monthly_diversity["Age 35-50"]
+    + monthly_diversity["Age Above 50"]
+)
+
+age_check = monthly_diversity[
+    [
+        "ds",
+        "Total Employees",
+        "Age Below 25",
+        "Age 25-35",
+        "Age 35-50",
+        "Age Above 50",
+        "Age Total"
+    ]
+].copy()
+
+age_check["Difference"] = (
+    age_check["Total Employees"]
+    - age_check["Age Total"]
+)
+
+display(
+    age_check.tail(12)
+)
+
+
+# ============================================================
+# RELIGION VALIDATION
+# ============================================================
+
+religion_check = monthly_diversity[
+    [
+        "ds",
+        "Total Employees",
+        "Hinduism",
+        "Muslim",
+        "Christian",
+        "Other Religion"
+    ]
+].copy()
+
+religion_check["Religion Recorded"] = (
+    religion_check["Hinduism"]
+    + religion_check["Muslim"]
+    + religion_check["Christian"]
+    + religion_check["Other Religion"]
+)
+
+religion_check["Religion Missing"] = (
+    religion_check["Total Employees"]
+    - religion_check["Religion Recorded"]
+)
+
+display(
+    religion_check.tail(12)
+)
+
+
+//////
+# ============================================================
+# FINAL MONTHLY DIVERSITY DATASET
+# ============================================================
+
+print("============================================================")
+print("FINAL MONTHLY DIVERSITY DATASET")
+print("============================================================")
+
+print("Shape:", monthly_diversity.shape)
+
+print(
+    "Date Range:",
+    monthly_diversity["ds"].min(),
+    "to",
+    monthly_diversity["ds"].max()
+)
+
+print("\nColumns:")
+print(
+    monthly_diversity.columns.tolist()
+)
+
+print("\nMissing Values:")
+display(
+    monthly_diversity.isna().sum()
+)
+
+print("\nLast 12 Months:")
+display(
+    monthly_diversity.tail(12)
+)
