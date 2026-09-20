@@ -1,1 +1,252 @@
+# ============================================================
+# DIVERSITY ANALYSIS PERIOD
+# ============================================================
+
+analysis_start = employee_master_clean["Actual Join Date"].min()
+analysis_end = employee_master_clean["Actual Join Date"].max()
+
+print("Analysis Start:", analysis_start)
+print("Analysis End  :", analysis_end)
+
+# Monthly period-end dates
+monthly_dates = pd.date_range(
+    start=analysis_start,
+    end=analysis_end,
+    freq="ME"
+)
+
+print("\nNumber of monthly periods:", len(monthly_dates))
+print("First month:", monthly_dates.min())
+print("Last month :", monthly_dates.max())
+
+
+/////
+# ============================================================
+# AGE CALCULATION
+# ============================================================
+
+def calculate_age(birth_dates, reference_date):
+    """
+    Calculate completed age as of reference_date.
+    """
+    return (
+        reference_date.year
+        - birth_dates.dt.year
+        - (
+            (reference_date.month, reference_date.day)
+            < (birth_dates.dt.month, birth_dates.dt.day)
+        )
+    )
+
+/////
+# ============================================================
+# BUILD MONTHLY DIVERSITY DATASET
+# ============================================================
+
+monthly_diversity = []
+
+for month_end in monthly_dates:
+
+    df = employee_master_clean.copy()
+
+    # --------------------------------------------------------
+    # Employees who had joined by this month
+    # --------------------------------------------------------
+    active_mask = (
+        df["Actual Join Date"] <= month_end
+    )
+
+    # --------------------------------------------------------
+    # If resignation date is available, employee is counted
+    # only until resignation.
+    # --------------------------------------------------------
+    resignation_mask = (
+        df["Resignation Date"].notna()
+        & (df["Resignation Date"] <= month_end)
+    )
+
+    active_mask = active_mask & (~resignation_mask)
+
+    active_df = df.loc[active_mask].copy()
+
+    # --------------------------------------------------------
+    # Calculate age as of this month
+    # --------------------------------------------------------
+    active_df["Age"] = calculate_age(
+        active_df["Birth Date"],
+        month_end
+    )
+
+    # --------------------------------------------------------
+    # Gender
+    # --------------------------------------------------------
+    male_count = (
+        (active_df["Gender"].str.strip().str.lower() == "male")
+        .sum()
+    )
+
+    female_count = (
+        (active_df["Gender"].str.strip().str.lower() == "female")
+        .sum()
+    )
+
+    other_gender_count = len(active_df) - (
+        male_count + female_count
+    )
+
+    # --------------------------------------------------------
+    # Religion
+    # --------------------------------------------------------
+    muslim_count = (
+        active_df["Religion"]
+        .fillna("")
+        .str.strip()
+        .str.lower()
+        .isin(["islam", "muslim"])
+        .sum()
+    )
+
+    christian_count = (
+        active_df["Religion"]
+        .fillna("")
+        .str.strip()
+        .str.lower()
+        .isin(["christian", "christianity"])
+        .sum()
+    )
+
+    # --------------------------------------------------------
+    # Age groups
+    # --------------------------------------------------------
+    age_below_25 = (
+        active_df["Age"] < 25
+    ).sum()
+
+    age_25_35 = (
+        (active_df["Age"] >= 25)
+        & (active_df["Age"] < 35)
+    ).sum()
+
+    age_35_50 = (
+        (active_df["Age"] >= 35)
+        & (active_df["Age"] <= 50)
+    ).sum()
+
+    age_above_50 = (
+        active_df["Age"] > 50
+    ).sum()
+
+    # --------------------------------------------------------
+    # Store monthly result
+    # --------------------------------------------------------
+    monthly_diversity.append({
+        "Month": month_end,
+        "Total Workforce": len(active_df),
+
+        "Male": male_count,
+        "Female": female_count,
+        "Other Gender": other_gender_count,
+
+        "Muslim": muslim_count,
+        "Christian": christian_count,
+
+        "Age Below 25": age_below_25,
+        "Age 25-35": age_25_35,
+        "Age 35-50": age_35_50,
+        "Age Above 50": age_above_50
+    })
+
+monthly_diversity = pd.DataFrame(monthly_diversity)
+
+print("Monthly Diversity Shape:", monthly_diversity.shape)
+
+display(monthly_diversity.head())
+display(monthly_diversity.tail())
+
+
+/////
+# ============================================================
+# VALIDATE MONTHLY DIVERSITY DATASET
+# ============================================================
+
+print("=== MONTHLY DIVERSITY VALIDATION ===")
+
+print("Rows:", len(monthly_diversity))
+print("Columns:", len(monthly_diversity.columns))
+
+print("\nDate range:")
+print(
+    monthly_diversity["Month"].min(),
+    "to",
+    monthly_diversity["Month"].max()
+)
+
+print("\nMissing values:")
+print(
+    monthly_diversity.isna().sum()
+)
+
+print("\nNegative values:")
+numeric_cols = monthly_diversity.columns[1:]
+
+for col in numeric_cols:
+    negative_count = (
+        monthly_diversity[col] < 0
+    ).sum()
+
+    if negative_count > 0:
+        print(col, negative_count)
+
+print("\nLast 12 months:")
+display(monthly_diversity.tail(12))
+
+
+/////
+# ============================================================
+# GENDER CONSISTENCY CHECK
+# ============================================================
+
+monthly_diversity["Gender Total"] = (
+    monthly_diversity["Male"]
+    + monthly_diversity["Female"]
+    + monthly_diversity["Other Gender"]
+)
+
+monthly_diversity["Gender Difference"] = (
+    monthly_diversity["Total Workforce"]
+    - monthly_diversity["Gender Total"]
+)
+
+print(
+    "Maximum Gender Difference:",
+    monthly_diversity["Gender Difference"].abs().max()
+)
+
+
+
+///////////
+# ============================================================
+# AGE CONSISTENCY CHECK
+# ============================================================
+
+monthly_diversity["Age Total"] = (
+    monthly_diversity["Age Below 25"]
+    + monthly_diversity["Age 25-35"]
+    + monthly_diversity["Age 35-50"]
+    + monthly_diversity["Age Above 50"]
+)
+
+monthly_diversity["Age Difference"] = (
+    monthly_diversity["Total Workforce"]
+    - monthly_diversity["Age Total"]
+)
+
+print(
+    "Maximum Age Difference:",
+    monthly_diversity["Age Difference"].abs().max()
+)
+
+
+///////
+
 
