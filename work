@@ -1,1 +1,10 @@
-
+print("=" * 80)
+print("AI UI DATA TYPE CHECK")
+print("key_findings:", type(key_findings), key_findings)
+print("data_quality:", type(data_quality), data_quality)
+print("insights:", type(insights), insights)
+print("recommendations:", type(recommendations), recommendations)
+print("filters:", type(filters), filters)
+print("kpis:", type(kpis), kpis)
+print("charts:", type(charts), charts)
+print("=" * 80)
