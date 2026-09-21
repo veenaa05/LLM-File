@@ -1,396 +1,510 @@
-# ============================================================
-# PREPARE DATA FOR MONTHLY DIVERSITY ANALYSIS
-# ============================================================
-
-active_df = employee_master_clean.copy()
-
-# Make sure required columns are datetime
-date_cols = [
-    "Actual Join Date",
-    "Resignation Date",
-    "Last Working Date",
-    "Birth Date"
-]
-
-for col in date_cols:
-    active_df[col] = pd.to_datetime(
-        active_df[col],
-        errors="coerce"
+@app.callback(
+        [
+        Output('charts-container', 'children'),
+        Output('store-chart-export-data', 'data'),
+        ],
+        [   Input({'type': 'filter-dropdown', 'index': ALL}, 'value'),
+            Input('store-ai-suggestions', 'data'),
+            Input('store-filter-selections-dashboard', 'data')],
+        prevent_initial_call=False
     )
-
-print("Active Data Shape:", active_df.shape)
-print(
-    "Unique Employees:",
-    active_df["Employee Code"].nunique()
-)
-
-print("\nRequired columns missing:")
-for col in [
-    "Employee Code",
-    "Gender",
-    "Religion",
-    "Birth Date",
-    "Actual Join Date",
-    "Resignation Date",
-    "Last Working Date"
-]:
-    print(
-        col,
-        "->",
-        active_df[col].isna().sum(),
-        "missing"
-    )
-
-////::/:::
-# ============================================================
-# CREATE MONTHLY DIVERSITY HISTORY
-# ============================================================
-
-monthly_diversity = []
-
-for month_end in monthly_dates:
-
-    # ========================================================
-    # 1. EMPLOYEE MUST HAVE JOINED BY THIS MONTH
-    # ========================================================
-
-    joined = (
-        active_df["Actual Join Date"].notna()
-        &
-        (
-            active_df["Actual Join Date"]
-            <= month_end
-        )
-    )
-
-    # ========================================================
-    # 2. EMPLOYEE SHOULD NOT HAVE RESIGNED BEFORE MONTH END
-    # ========================================================
-
-    resigned = (
-        active_df["Resignation Date"].notna()
-        &
-        (
-            active_df["Resignation Date"]
-            <= month_end
-        )
-    )
-
-    # ========================================================
-    # 3. EMPLOYEE SHOULD NOT HAVE LAST WORKING DATE
-    #    BEFORE / ON MONTH END
-    # ========================================================
-
-    left_company = (
-        active_df["Last Working Date"].notna()
-        &
-        (
-            active_df["Last Working Date"]
-            <= month_end
-        )
-    )
-
-    # ========================================================
-    # ACTIVE EMPLOYEES AS OF MONTH END
-    # ========================================================
-
-    active_mask = (
-        joined
-        &
-        ~resigned
-        &
-        ~left_company
-    )
-
-    month_df = active_df.loc[
-        active_mask
-    ].copy()
-
-    # ========================================================
-    # CALCULATE AGE AS OF MONTH END
-    # ========================================================
-
-    month_df["Age"] = calculate_age(
-        month_df["Birth Date"],
-        month_end
-    )
-
-    # ========================================================
-    # GENDER
-    # ========================================================
-
-    gender = (
-        month_df["Gender"]
-        .astype("string")
-        .str.strip()
-        .str.lower()
-    )
-
-    male_count = (
-        gender == "male"
-    ).sum()
-
-    female_count = (
-        gender == "female"
-    ).sum()
-
-    other_gender_count = (
-        ~gender.isin([
-            "male",
-            "female"
-        ])
-        & gender.notna()
-    ).sum()
-
-    # ========================================================
-    # RELIGION
-    # ========================================================
-
-    religion = (
-        month_df["Religion"]
-        .astype("string")
-        .str.strip()
-        .str.lower()
-    )
-
-    hindu_count = (
-        religion == "hinduism"
-    ).sum()
-
-    muslim_count = (
-        religion.isin([
-            "islam",
-            "muslim"
-        ])
-    ).sum()
-
-    christian_count = (
-        religion.isin([
-            "christianity",
-            "christian"
-        ])
-    ).sum()
-
-    other_religion_count = (
-        religion.notna()
-        &
-        ~religion.isin([
-            "hinduism",
-            "islam",
-            "muslim",
-            "christianity",
-            "christian"
-        ])
-    ).sum()
-
-    # ========================================================
-    # AGE GROUPS
-    # ========================================================
-
-    age_below_25 = (
-        month_df["Age"] < 25
-    ).sum()
-
-    age_25_35 = (
-        (month_df["Age"] >= 25)
-        &
-        (month_df["Age"] < 35)
-    ).sum()
-
-    age_35_50 = (
-        (month_df["Age"] >= 35)
-        &
-        (month_df["Age"] <= 50)
-    ).sum()
-
-    age_above_50 = (
-        month_df["Age"] > 50
-    ).sum()
-
-    # ========================================================
-    # SAVE MONTH
-    # ========================================================
-
-    monthly_diversity.append({
-
-        "ds": month_end,
-
-        "Total Employees": len(month_df),
-
-        "Male": male_count,
-        "Female": female_count,
-        "Other Gender": other_gender_count,
-
-        "Hinduism": hindu_count,
-        "Muslim": muslim_count,
-        "Christian": christian_count,
-        "Other Religion": other_religion_count,
-
-        "Age Below 25": age_below_25,
-        "Age 25-35": age_25_35,
-        "Age 35-50": age_35_50,
-        "Age Above 50": age_above_50
-    })
-
-
-# ============================================================
-# CONVERT TO DATAFRAME
-# ============================================================
-
-monthly_diversity = pd.DataFrame(
-    monthly_diversity
-)
-
-monthly_diversity["ds"] = pd.to_datetime(
-    monthly_diversity["ds"]
-)
-
-print("Monthly Diversity Shape:")
-print(monthly_diversity.shape)
-
-display(monthly_diversity.head())
-
-
-
-///////
-
-# ============================================================
-# CHECK RECENT MONTHS
-# ============================================================
-
-display(
-    monthly_diversity.tail(12)
-)
-
-
-
-////:/
-# ============================================================
-# GENDER VALIDATION
-# ============================================================
-
-monthly_diversity["Gender Total"] = (
-    monthly_diversity["Male"]
-    + monthly_diversity["Female"]
-    + monthly_diversity["Other Gender"]
-)
-
-gender_check = monthly_diversity[
-    [
-        "ds",
-        "Total Employees",
-        "Male",
-        "Female",
-        "Other Gender",
-        "Gender Total"
-    ]
-].copy()
-
-gender_check["Difference"] = (
-    gender_check["Total Employees"]
-    - gender_check["Gender Total"]
-)
-
-display(
-    gender_check.tail(12)
-)
-
-
-///////
-# ============================================================
-# AGE GROUP VALIDATION
-# ============================================================
-
-monthly_diversity["Age Total"] = (
-    monthly_diversity["Age Below 25"]
-    + monthly_diversity["Age 25-35"]
-    + monthly_diversity["Age 35-50"]
-    + monthly_diversity["Age Above 50"]
-)
-
-age_check = monthly_diversity[
-    [
-        "ds",
-        "Total Employees",
-        "Age Below 25",
-        "Age 25-35",
-        "Age 35-50",
-        "Age Above 50",
-        "Age Total"
-    ]
-].copy()
-
-age_check["Difference"] = (
-    age_check["Total Employees"]
-    - age_check["Age Total"]
-)
-
-display(
-    age_check.tail(12)
-)
-
-
-# ============================================================
-# RELIGION VALIDATION
-# ============================================================
-
-religion_check = monthly_diversity[
-    [
-        "ds",
-        "Total Employees",
-        "Hinduism",
-        "Muslim",
-        "Christian",
-        "Other Religion"
-    ]
-].copy()
-
-religion_check["Religion Recorded"] = (
-    religion_check["Hinduism"]
-    + religion_check["Muslim"]
-    + religion_check["Christian"]
-    + religion_check["Other Religion"]
-)
-
-religion_check["Religion Missing"] = (
-    religion_check["Total Employees"]
-    - religion_check["Religion Recorded"]
-)
-
-display(
-    religion_check.tail(12)
-)
-
-
-//////
-# ============================================================
-# FINAL MONTHLY DIVERSITY DATASET
-# ============================================================
-
-print("============================================================")
-print("FINAL MONTHLY DIVERSITY DATASET")
-print("============================================================")
-
-print("Shape:", monthly_diversity.shape)
-
-print(
-    "Date Range:",
-    monthly_diversity["ds"].min(),
-    "to",
-    monthly_diversity["ds"].max()
-)
-
-print("\nColumns:")
-print(
-    monthly_diversity.columns.tolist()
-)
-
-print("\nMissing Values:")
-display(
-    monthly_diversity.isna().sum()
-)
-
-print("\nLast 12 Months:")
-display(
-    monthly_diversity.tail(12)
-)
+    
+    def update_charts(filter_values, ai_suggestions, filter_selections):
+        import dash
+        ctx = dash.callback_context
+        
+        print("=" *80)
+        print("UPDATE_CHARTS FIRED")
+        print("TRIGGERED:", ctx.triggered)
+        print("AI_SUGGESTIONS TYPE:", type(ai_suggestions))
+        print("AI_SUGGESTIONS VALUE:", ai_suggestions)
+        print("=" *80)
+            
+        """Render AI-suggested charts when available, else auto-generate from data."""
+        import plotly.graph_objects as go
+
+        try:
+            if not get_cached_df:
+                return html.Div("Error: Data loading not configured"), []
+
+            df = get_cached_df()
+            if df is None:
+                return html.Div("Error: Could not load cached data", style={'color': '#DC2626'}), []
+
+            # Apply filters safely against the current dataset
+            filtered_df = df.copy()
+            if isinstance(filter_selections, list) and isinstance(filter_values, list):
+                for filter_sel, filter_value in zip(filter_selections, filter_values):
+                    if not isinstance(filter_sel, dict):
+                        continue
+                    col = filter_sel.get('column', '')
+                    # Ignore filters whose column does not exist
+                    # in the current uploaded dataset
+                    if not col or col not in filtered_df.columns:
+                        print(
+                            f"[WARN] Ignoring invalid filter column "
+                            f"'{col}' - not present in current dataset"
+                        )
+                        continue
+
+                    if filter_value and filter_value != "All":
+                        filtered_df = filtered_df[
+                            filtered_df[col].astype(str) == str(filter_value)
+                        ]
+
+            # # Apply filters
+            # filtered_df = df.copy()
+            # if filter_selections and filter_values:
+            #     for filter_sel, filter_value in zip(filter_selections, filter_values):
+            #         col = filter_sel.get('column', '')
+            #         if filter_value and filter_value != "All" and col in filtered_df.columns:
+            #             filtered_df = filtered_df[filtered_df[col].astype(str) == str(filter_value)]
+
+            print(f"[CHARTS] Generating charts for {len(filtered_df):,} rows")
+
+            # Safety coercion pass — handles pandas 3.0 StringDtype columns
+            # (dtype prints as 'str' not 'object', so we use not is_numeric_dtype).
+            filtered_df = filtered_df.copy()
+            for col in list(filtered_df.columns):
+                if not is_numeric_dtype(filtered_df[col]):
+                    try:
+                        cleaned = filtered_df[col].astype(str).str.replace(r'[,₹$€£]', '', regex=True).str.strip()
+                        converted = pd.to_numeric(cleaned, errors='coerce')
+                        if converted.notna().sum() / max(len(filtered_df), 1) > 0.5:
+                            filtered_df[col] = converted
+                    except Exception:
+                        pass
+
+            # Classify columns
+            cat_cols = [c for c in filtered_df.columns
+                        if (filtered_df[c].dtype == 'object' or is_string_dtype(filtered_df[c]))
+                        and 2 <= filtered_df[c].nunique() <= 50]
+            n_rows = len(filtered_df)
+            # Cardinality threshold: relaxed for small filtered sets (avoid excluding
+            # continuous metrics like Amount when only a few hundred rows remain)
+            card_thresh = 0.95 if n_rows < 5000 else 0.8
+            num_cols = [c for c in filtered_df.columns
+                        if is_numeric_dtype(filtered_df[c])
+                        and filtered_df[c].nunique() > 1
+                        and filtered_df[c].notna().sum() > 0
+                        and not c.startswith('Unnamed')
+                        and (filtered_df[c].nunique() / n_rows) < card_thresh]
+
+            print(f"[CHARTS] Found {len(cat_cols)} categorical, {len(num_cols)} numeric columns")
+
+            chart_divs = []
+            pending_charts = []  # (fig, label, x_col, y_col, chart_type)
+            # Charts currently displayed on the dashboard.
+            # These will also be used for Analysis & Insights PDF export.
+            chart_export_data = []
+
+            CHART_STYLE = {
+                'background': '#FFFFFF',
+                'borderRadius': '8px',
+                'padding': '4px',
+                'boxShadow': '0 2px 8px rgba(0,0,0,0.08)',
+            }
+            LAYOUT_ARGS = dict(
+                height=400,
+                margin=dict(l=60, r=30, t=70, b=80),
+                paper_bgcolor='#FFFFFF',
+                plot_bgcolor='#FAFBFC',
+                font=dict(color='#1A1F2E', size=11),
+                title_font=dict(size=15, color='#1A365D', family='Arial, sans-serif'),
+                showlegend=True,
+                legend=dict(
+                    x=0.01, y=0.99,
+                    bgcolor='rgba(255, 255, 255, 0.8)',
+                    bordercolor='#E5E7EB',
+                    borderwidth=1,
+                    font=dict(size=10)
+                ),
+                hovermode='x unified',
+                xaxis=dict(showgrid=True, gridwidth=1, gridcolor='#F0F0F0'),
+                yaxis=dict(showgrid=True, gridwidth=1, gridcolor='#F0F0F0'),
+                clickmode='event+select',  # Enable click events
+            )
+
+            def make_card(fig, label, chart_index=0, precomputed_insight=None):
+                fig.update_layout(**LAYOUT_ARGS)
+                fig_dict = fig.to_dict() if hasattr(fig, 'to_dict') else fig
+                insight = _describe_figure(fig_dict, filtered_df)
+                # Save the exact chart currently being displayed.
+                chart_export_data.append({
+                    'label': label,
+                    'figure': fig_dict,
+                    'insight': insight or '',
+                })
+                
+                # insight = precomputed_insight if precomputed_insight is not None else _describe_figure(fig_dict, filtered_df)
+                insight_el = html.Div([
+                    html.Div([
+                        html.Span("ANALYST INSIGHT", style={
+                            'fontSize': '9px', 'fontWeight': '800',
+                            'textTransform': 'uppercase', 'letterSpacing': '0.12em',
+                            'backgroundColor': '#1A365D', 'color': 'white',
+                            'padding': '3px 10px', 'borderRadius': '3px',
+                            'marginRight': '12px', 'flexShrink': '0',
+                        }),
+                        html.Span(insight or "—", style={
+                            'color': '#1A1F2E', 'fontSize': '12px', 'lineHeight': '1.75',
+                            'fontStyle': 'normal',
+                        }),
+                    ], style={
+                        'display': 'flex', 'alignItems': 'flex-start', 'gap': '4px',
+                    }),
+                ], style={
+                    'padding': '12px 16px',
+                    'borderTop': '1px solid #E2E8F0',
+                    'borderLeft': '4px solid #1A365D',
+                    'backgroundColor': '#F8FAFF',
+                    'borderRadius': '0 0 8px 8px',
+                    'margin': '0',
+                }) if insight else html.Div(style={'display': 'none'})
+
+                return html.Div([
+                    dcc.Graph(
+                        id={'type': 'chart-graph', 'index': chart_index},
+                        figure=fig,
+                        config={'displayModeBar': False},
+                        style={'marginBottom': '0'}
+                    ),
+                    # Static description — no callback needed, generated inline
+                    html.Div(
+                        id={'type': 'chart-description', 'index': chart_index},
+                        children=insight_el,
+                    ),
+                ], style=CHART_STYLE)
+
+            def _gen_insight(item):
+                """Generate data-grounded insight from actual Plotly trace values.
+
+                Uses _describe_figure (rule-based, always accurate) rather than
+                the LLM, which tends to hallucinate names and values for chart
+                narration tasks despite strict prompts.
+                """
+                fig_, label_, x_col_, y_col_, ct_ = item
+                fig_dict_ = fig_.to_dict() if hasattr(fig_, 'to_dict') else fig_
+                return _describe_figure(fig_dict_, filtered_df)
+
+            # ── AI-SUGGESTED CHARTS (when store-ai-suggestions is populated) ──
+            if not isinstance(ai_suggestions, dict):
+                print(f"[WARN] ai_suggestions is {type(ai_suggestions)}. Skipping AI charts.")
+                ai_suggestions = {}
+                
+            ai_chart_specs = (ai_suggestions or {}).get('charts', [])
+            if ai_chart_specs:
+                print(f"[CHARTS] Rendering {len(ai_chart_specs)} AI-suggested charts")
+                for spec in ai_chart_specs:
+                    try:
+                        # ct   = (spec.get('type') or 'bar').lower()
+                        print("AI SPEC:", spec)
+                        ct = (spec.get('type') or spec.get('chart_type') or 'bar').lower()
+                        x_c  = spec.get('x', '')
+                        y_c  = spec.get('y', '')
+                        ttl  = spec.get('title', f'{ct}: {x_c}')
+
+                        # Resolve SQL-style column names the LLM sometimes returns
+                        # e.g. "count(*)", "COUNT(id)", "sum(Amount)" → clear y_c so
+                        # chart falls back to count-based rendering
+                        if y_c and y_c not in filtered_df.columns:
+                            y_lower = y_c.lower()
+                            if any(kw in y_lower for kw in ('count', 'sum(', 'avg(', 'max(', 'min(')):
+                                # Try to extract the column name from "sum(Amount)" → "Amount"
+                                inner = _re.sub(r'\w+\((.+)\)', r'\1', y_c).strip()
+                                if inner in filtered_df.columns:
+                                    y_c = inner
+                                else:
+                                    y_c = ''  # fall back to count-based chart
+                            else:
+                                y_c = ''  # unknown column → count-based
+
+                        # Validate x column exists
+                        if x_c and x_c not in filtered_df.columns:
+                            print(f"[AI CHART] x-col '{x_c}' not in dataframe, skipping")
+                            continue
+
+                        fig = None
+
+                        if ct == 'bar':
+                            if y_c and y_c in filtered_df.columns and is_numeric_dtype(filtered_df[y_c]):
+                                agg = filtered_df.groupby(x_c)[y_c].sum().reset_index().nlargest(15, y_c)
+                                fig = px.bar(agg, x=x_c, y=y_c, title=ttl, color=y_c, color_continuous_scale='Blues')
+                                fig.update_coloraxes(showscale=False)
+                            else:
+                                vc = filtered_df[x_c].value_counts().head(15).reset_index()
+                                vc.columns = [x_c, 'Count']
+                                fig = px.bar(vc, x=x_c, y='Count', title=ttl, color='Count', color_continuous_scale='Blues')
+                                fig.update_coloraxes(showscale=False)
+
+                        elif ct == 'pie':
+                            if y_c and y_c in filtered_df.columns and is_numeric_dtype(filtered_df[y_c]):
+                                agg = filtered_df.groupby(x_c)[y_c].sum().nlargest(8)
+                                fig = px.pie(values=agg.values, names=agg.index, title=ttl, hole=0.35,
+                                             color_discrete_sequence=px.colors.qualitative.Set2)
+                            else:
+                                vc = filtered_df[x_c].value_counts().head(8)
+                                fig = px.pie(values=vc.values, names=vc.index, title=ttl, hole=0.35,
+                                             color_discrete_sequence=px.colors.qualitative.Set2)
+
+                        elif ct == 'line':
+                            _has_numeric_y = y_c and y_c in filtered_df.columns and is_numeric_dtype(filtered_df[y_c])
+                            try:
+                                cols = [x_c] if not _has_numeric_y else [x_c, y_c]
+                                line_df = filtered_df[cols].dropna(subset=[x_c]).copy()
+
+                                # Robust date parsing: try specific format first, then mixed with utc
+                                raw_x = line_df[x_c]
+                                parsed = None
+                                for fmt in ('%d-%b-%y', '%d-%b-%Y', '%Y-%m-%d', '%d/%m/%Y', None):
+                                    try:
+                                        if fmt:
+                                            p = pd.to_datetime(raw_x, format=fmt, errors='coerce')
+                                        else:
+                                            p = pd.to_datetime(raw_x, format='mixed', dayfirst=True,
+                                                               errors='coerce', utc=True)
+                                            p = p.dt.tz_convert(None)  # strip timezone
+                                        if p.notna().sum() > len(raw_x) * 0.5:
+                                            parsed = p
+                                            break
+                                    except Exception:
+                                        continue
+
+                                if parsed is not None:
+                                    line_df[x_c] = parsed
+                                    line_df = line_df.dropna(subset=[x_c]).sort_values(x_c)
+                                    line_df[x_c] = line_df[x_c].dt.to_period('M').dt.to_timestamp()
+
+                                if _has_numeric_y:
+                                    agg = line_df.groupby(x_c)[y_c].sum().reset_index()
+                                    y_label = y_c
+                                else:
+                                    agg = line_df.groupby(x_c).size().reset_index(name='Count')
+                                    y_label = 'Count'
+                                fig = px.line(agg, x=x_c, y=y_label, title=ttl,
+                                              markers=True, color_discrete_sequence=['#1A365D'])
+                            except Exception as ex:
+                                print(f"[AI CHART] Line chart error: {ex}")
+
+                        elif ct == 'histogram':
+                            col_h = y_c if (y_c and y_c in filtered_df.columns) else x_c
+                            if col_h in filtered_df.columns and is_numeric_dtype(filtered_df[col_h]):
+                                fig = px.histogram(filtered_df, x=col_h, nbins=30, title=ttl,
+                                                   color_discrete_sequence=['#1A365D'])
+
+                        elif ct == 'box':
+                            if y_c and y_c in filtered_df.columns and is_numeric_dtype(filtered_df[y_c]):
+                                top_cats = filtered_df[x_c].value_counts().head(10).index
+                                box_df = filtered_df[filtered_df[x_c].isin(top_cats)]
+                                fig = px.box(box_df, x=x_c, y=y_c, title=ttl,
+                                             color=x_c, color_discrete_sequence=px.colors.qualitative.Set2)
+                                fig.update_layout(showlegend=False)
+
+                        elif ct == 'scatter':
+                            if (x_c in filtered_df.columns and y_c and y_c in filtered_df.columns
+                                    and is_numeric_dtype(filtered_df[x_c])
+                                    and is_numeric_dtype(filtered_df[y_c])):
+                                fig = px.scatter(filtered_df.sample(min(2000, len(filtered_df))),
+                                                 x=x_c, y=y_c, title=ttl,
+                                                 color_discrete_sequence=['#1A365D'], opacity=0.6)
+
+                        elif ct == 'funnel':
+                            if y_c and y_c in filtered_df.columns and is_numeric_dtype(filtered_df[y_c]):
+                                fd = filtered_df.groupby(x_c)[y_c].sum().nlargest(8).reset_index()
+                                fig = px.funnel(fd, x=y_c, y=x_c, title=ttl,
+                                                color_discrete_sequence=['#1A365D'])
+
+                        elif ct == 'treemap':
+                            if y_c and y_c in filtered_df.columns and is_numeric_dtype(filtered_df[y_c]):
+                                # Look for a second categorical to nest under
+                                second_cat = next((c for c in cat_cols if c != x_c), None)
+                                if second_cat:
+                                    td = filtered_df.groupby([x_c, second_cat])[y_c].sum().reset_index()
+                                    td = td[td[y_c] > 0]
+                                    fig = px.treemap(td, path=[x_c, second_cat], values=y_c, title=ttl,
+                                                     color=y_c, color_continuous_scale='Blues')
+                                else:
+                                    td = filtered_df.groupby(x_c)[y_c].sum().reset_index()
+                                    td = td[td[y_c] > 0]
+                                    fig = px.treemap(td, path=[x_c], values=y_c, title=ttl,
+                                                     color=y_c, color_continuous_scale='Blues')
+                                fig.update_layout(height=420)
+
+                        elif ct == 'heatmap':
+                            # Recompute locally — num_cols may be restricted by cardinality filter
+                            local_num = [c for c in filtered_df.columns
+                                         if is_numeric_dtype(filtered_df[c])
+                                         and filtered_df[c].nunique() > 1
+                                         and not c.startswith('Unnamed')]
+                            if len(local_num) >= 2:
+                                corr = filtered_df[local_num[:8]].corr().round(2)
+                                fig = px.imshow(corr, text_auto=True, color_continuous_scale='RdBu_r',
+                                                zmin=-1, zmax=1, title=ttl)
+                                fig.update_layout(height=420)
+
+                        if fig is not None:
+                            pending_charts.append((fig, ttl, x_c, y_c, ct))
+                            print(f"[AI CHART] Built: {ttl}")
+                        else:
+                            print(f"[AI CHART] Could not render '{ttl}' (type={ct}, x={x_c}, y={y_c})")
+                    except Exception as e:
+                        print(f"[AI CHART] Error rendering '{spec.get('title', '')}': {e}")
+
+                # After AI charts, add 2 standard auto-charts if data permits
+                if cat_cols and not any(s.get('type') == 'pie' for s in ai_chart_specs):
+                    try:
+                        col = cat_cols[0]
+                        vc = filtered_df[col].value_counts().head(8)
+                        fig = px.pie(values=vc.values, names=vc.index, title=f"Share by {col}",
+                                    color_discrete_sequence=px.colors.qualitative.Set2, hole=0.35)
+                        pending_charts.append((fig, f"pie_{col}", col, 'Count', 'pie'))
+                    except Exception:
+                        pass
+                if len(num_cols) >= 3 and not any(s.get('type') == 'heatmap' for s in ai_chart_specs):
+                    try:
+                        corr = filtered_df[num_cols[:8]].corr().round(2)
+                        fig = px.imshow(corr, text_auto=True, color_continuous_scale='RdBu_r',
+                                        zmin=-1, zmax=1, title="Correlation Matrix")
+                        fig.update_layout(height=420)
+                        pending_charts.append((fig, "correlation", '', '', 'heatmap'))
+                    except Exception:
+                        pass
+
+            else:
+                # ── NO AI SUGGESTIONS — full auto-generation ─────────────────
+
+                # ── 1. Categorical distributions (bar: top 15) ───────────────
+                for col in cat_cols[:5]:
+                    try:
+                        vc = filtered_df[col].value_counts().head(15).reset_index()
+                        vc.columns = [col, 'Count']
+                        fig = px.bar(vc, x=col, y='Count',
+                                     title=f"Distribution: {col}",
+                                     color='Count', color_continuous_scale='Blues')
+                        fig.update_coloraxes(showscale=False)
+                        pending_charts.append((fig, col, col, 'Count', 'bar'))
+                        print(f"[CHARTS] Added categorical bar: {col}")
+                    except Exception as e:
+                        print(f"[CHARTS] Error categorical {col}: {e}")
+
+                # ── 2. Numeric histograms ─────────────────────────────────────
+                for col in num_cols[:3]:
+                    try:
+                        fig = px.histogram(filtered_df, x=col, nbins=30,
+                                           title=f"Distribution: {col}",
+                                           color_discrete_sequence=['#1A365D'])
+                        pending_charts.append((fig, col, col, col, 'histogram'))
+                        print(f"[CHARTS] Added histogram: {col}")
+                    except Exception as e:
+                        print(f"[CHARTS] Error histogram {col}: {e}")
+
+                # ── 3. Numeric by categorical (bar aggregation) ───────────────
+                if cat_cols and num_cols:
+                    for num_col in num_cols[:2]:
+                        for cat_col in cat_cols[:2]:
+                            try:
+                                agg = filtered_df.groupby(cat_col)[num_col].sum().reset_index()
+                                agg = agg.nlargest(15, num_col)
+                                fig = px.bar(agg, x=cat_col, y=num_col,
+                                             title=f"Total {num_col} by {cat_col}",
+                                             color=num_col, color_continuous_scale='Teal')
+                                fig.update_coloraxes(showscale=False)
+                                pending_charts.append((fig, f"{num_col}_by_{cat_col}", cat_col, num_col, 'bar'))
+                                print(f"[CHARTS] Added agg bar: {num_col} by {cat_col}")
+                            except Exception as e:
+                                print(f"[CHARTS] Error agg {num_col} by {cat_col}: {e}")
+
+                # ── 4. Box plot ───────────────────────────────────────────────
+                if cat_cols and num_cols:
+                    try:
+                        cat, num = cat_cols[0], num_cols[0]
+                        top_cats = filtered_df[cat].value_counts().head(10).index
+                        box_df = filtered_df[filtered_df[cat].isin(top_cats)]
+                        fig = px.box(box_df, x=cat, y=num,
+                                     title=f"{num} Distribution by {cat}",
+                                     color=cat, color_discrete_sequence=px.colors.qualitative.Set2)
+                        fig.update_layout(showlegend=False)
+                        pending_charts.append((fig, f"box_{cat}_{num}", cat, num, 'box'))
+                        print(f"[CHARTS] Added box plot: {num} by {cat}")
+                    except Exception as e:
+                        print(f"[CHARTS] Error box plot: {e}")
+
+                # ── 5. Pie chart ──────────────────────────────────────────────
+                if cat_cols:
+                    try:
+                        col = cat_cols[0]
+                        vc = filtered_df[col].value_counts().head(8)
+                        fig = px.pie(values=vc.values, names=vc.index,
+                                     title=f"Share by {col}",
+                                     color_discrete_sequence=px.colors.qualitative.Set2, hole=0.35)
+                        pending_charts.append((fig, f"pie_{col}", col, 'Count', 'pie'))
+                        print(f"[CHARTS] Added pie: {col}")
+                    except Exception as e:
+                        print(f"[CHARTS] Error pie: {e}")
+
+                # ── 6. Correlation heatmap (≥3 numeric) ───────────────────────
+                if len(num_cols) >= 3:
+                    try:
+                        corr = filtered_df[num_cols[:8]].corr().round(2)
+                        fig = px.imshow(corr, text_auto=True, color_continuous_scale='RdBu_r',
+                                        zmin=-1, zmax=1, title="Correlation Matrix")
+                        fig.update_layout(height=420)
+                        pending_charts.append((fig, "correlation", '', '', 'heatmap'))
+                        print(f"[CHARTS] Added correlation heatmap")
+                    except Exception as e:
+                        print(f"[CHARTS] Error heatmap: {e}")
+
+                # ── 7. Funnel ─────────────────────────────────────────────────
+                if cat_cols and num_cols:
+                    try:
+                        cat, num = cat_cols[0], num_cols[0]
+                        funnel_data = filtered_df.groupby(cat)[num].sum().nlargest(8).reset_index()
+                        fig = px.funnel(funnel_data, x=num, y=cat,
+                                        title=f"Top {cat} by {num} (Funnel)",
+                                        color_discrete_sequence=['#1A365D'])
+                        pending_charts.append((fig, f"funnel_{cat}", cat, num, 'funnel'))
+                        print(f"[CHARTS] Added funnel: {cat} by {num}")
+                    except Exception as e:
+                        print(f"[CHARTS] Error funnel: {e}")
+
+                # ── 8. Treemap ────────────────────────────────────────────────
+                if len(cat_cols) >= 2 and num_cols:
+                    try:
+                        cat1, cat2, num = cat_cols[0], cat_cols[1], num_cols[0]
+                        tree_df = filtered_df.groupby([cat1, cat2])[num].sum().reset_index()
+                        tree_df = tree_df[tree_df[num] > 0]
+                        fig = px.treemap(tree_df, path=[cat1, cat2], values=num,
+                                         title=f"{num} Breakdown: {cat1} > {cat2}",
+                                         color=num, color_continuous_scale='Blues')
+                        fig.update_layout(height=420)
+                        pending_charts.append((fig, "treemap", cat1, num, 'treemap'))
+                        print(f"[CHARTS] Added treemap")
+                    except Exception as e:
+                        print(f"[CHARTS] Error treemap: {e}")
+
+            print(f"[CHARTS] Built {len(pending_charts)} charts — generating insights...")
+
+            if not pending_charts:
+                return html.Div("No charts could be generated for this data.",
+                                style={'color': '#6B7280', 'padding': '20px', 'textAlign': 'center'}), []
+
+            # ── Batch-generate insights in parallel (LLM or stats fallback) ──
+            n_workers = min(8, len(pending_charts))
+            try:
+                with ThreadPoolExecutor(max_workers=n_workers) as ex:
+                    insights = list(ex.map(_gen_insight, pending_charts, timeout=45))
+            except Exception as _te:
+                print(f"[WARN] Parallel insight generation error: {_te} — falling back to stats")
+                insights = [_gen_insight(item) for item in pending_charts]
+
+            for i, (item, insight) in enumerate(zip(pending_charts, insights)):
+                fig_, label_ = item[0], item[1]
+                chart_divs.append(make_card(fig_, label_, i, precomputed_insight=insight))
+
+            print(f"[CHARTS] Total charts rendered: {len(chart_divs)}")
+            return chart_divs, chart_export_data
+
+        except Exception as e:
+            import traceback
+            print(f"[ERROR] update_charts: {e}\n{traceback.format_exc()}")
+            return html.Div(f"Error rendering charts: {str(e)}", style={'color': '#DC2626'}), []
