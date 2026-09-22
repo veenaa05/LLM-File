@@ -1,1 +1,27 @@
+print("=" * 80)
+print("DETAILED AI UI TYPE CHECK")
 
+def debug_types(name, value):
+    print(f"{name}: type={type(value)}")
+
+    if isinstance(value, list):
+        for i, item in enumerate(value):
+            print(f"  {name}[{i}]: type={type(item)}")
+            if isinstance(item, dict):
+                for k, v in item.items():
+                    print(f"      {k}: type={type(v)}, value={str(v)[:150]}")
+
+    elif isinstance(value, dict):
+        for k, v in value.items():
+            print(f"  {name}.{k}: type={type(v)}, value={str(v)[:150]}")
+
+
+debug_types("key_findings", key_findings)
+debug_types("data_quality", data_quality)
+debug_types("insights", insights)
+debug_types("recommendations", recommendations)
+debug_types("filters", filters)
+debug_types("kpis", kpis)
+debug_types("charts", charts)
+
+print("=" * 80)
