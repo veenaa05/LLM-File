@@ -1,27 +1,106 @@
-print("=" * 80)
-print("DETAILED AI UI TYPE CHECK")
-
-def debug_types(name, value):
-    print(f"{name}: type={type(value)}")
-
-    if isinstance(value, list):
-        for i, item in enumerate(value):
-            print(f"  {name}[{i}]: type={type(item)}")
-            if isinstance(item, dict):
-                for k, v in item.items():
-                    print(f"      {k}: type={type(v)}, value={str(v)[:150]}")
-
-    elif isinstance(value, dict):
-        for k, v in value.items():
-            print(f"  {name}.{k}: type={type(v)}, value={str(v)[:150]}")
-
-
-debug_types("key_findings", key_findings)
-debug_types("data_quality", data_quality)
-debug_types("insights", insights)
-debug_types("recommendations", recommendations)
-debug_types("filters", filters)
-debug_types("kpis", kpis)
-debug_types("charts", charts)
-
-print("=" * 80)
+AI UI DATA TYPE CHECK
+key_findings: <class 'list'> ['The dataset contains 4,205 records with a total Invoice Amount of approximately 242.98 million. The mean invoice value is 57,838.55, but the median is significantly lower at 23,010.0, indicating a right-skewed distribution where a small number of high-value invoices drive the total volume.', "There is a significant discrepancy between total invoiced amounts and collected balances. The sum of 'Balance Collection Amount' is negative (-24.69 million), while the 'Balance Amount' sum is positive (218.06 million). This suggests that the 'Balance Collection Amount' column likely represents net adjustments, credits, or write-offs rather than gross collections, or that there is a substantial outstanding receivable position.", "Data quality is a critical concern. The 'Brand Name' columnhas 98.12% missing values, 'Property Name' has 77.31% missing values, and 'Marsha' has 57.62% missing values. These gaps severely limit the ability to analyze performance by brand or specific property location."]
+data_quality: <class 'dict'> {'missing_values': {'Brand Name': 98.12, 'Property Name': 77.31, 'Marsha': 57.62, 'Unnamed: 18': 79.5, 'Nature of Services': 8.25, 'Revenue Head': 8.25, 'Contact Person Name': 8.7, 'Project MID': 10.15}, 'outliers_detected': False, 'data_completeness': 0.875, 'recommendation': "Investigate the source of the 'Brand Name'and 'Property Name' data gaps. If these fields are not consistently populated, consider removing them from primary analytical filters or implementing data entry protocols to improve completeness. The 'Unnamed: 18' column should be renamed or investigated as it has high missingness and an ambiguous label."}
+insights: <class 'list'> ["The 'Marriott' company group accounts for 46.86% of records, and 'Others' accounts for 49.98%. This indicates a highly fragmented client base with no single dominant group, suggesting a need for segment-specific collection strategies.", "The 'Payroll' department and 'Payroll Management' revenue head are the most frequent categories (approx. 35-38% each). This suggests the core business volume is concentrated in payroll-related services.", "A significant portion of invoices have zero values in aging buckets like 'Below 30 Days' (67.54%) and 'Overdue 30-60 Days' (77.47%), while 'Balance Amount' is non-zero. This implies that many invoices are either fully paid, fully written off, or have balances that do not fall into standard aging buckets, requiring further investigation into the 'Balance Amount' calculation logic.", "The 'GST NO' column is numeric but contains only zeros, indicating it is not being used for GST identification or is incorrectly formatted."]
+recommendations: <class 'list'> ["Prioritize data cleansing for 'Brand Name' and 'Property Name' to enable granular performance analysis. Until these are filled, analysis should focus on 'Company Group' and 'Department'.", "Investigate the negative 'Balance Collection Amount' values. A sum of -24.69 million suggests significant credits or adjustments. Understanding the nature of these negative values is crucial for accurate cash flow forecasting.", "Review the 'Invoice Date' column. The statistics show a min/max of 1970-01-01, which is likely an error. Correcting this is essential for any time-based reporting or aging analysis.", "Monitor the 'Overdue Above 180 Days' and 'Above 1 year' buckets. Although the zero percentage is high (92% and 90% respectively), the non-zero amounts (sums of 15.55 million and 12.12 million) represent long-tail receivables that may require specific collection efforts or write-off decisions."]
+filters: <class 'list'> [{'column': 'Company Group', 'filter_type': 'dropdown', 'label': 'Company Group'}, {'column': 'Department', 'filter_type': 'dropdown', 'label': 'Department'}, {'column': 'Nature of Services', 'filter_type': 'dropdown', 'label': 'Nature of Services'}]
+kpis: <class 'list'> [{'metric': 'Invoice Amount', 'aggregation': 'sum', 'label': 'Total Invoiced Amount'}, {'metric': 'Balance Amount', 'aggregation': 'sum', 'label': 'Total Outstanding Balance'}, {'metric': 'Invoice No', 'aggregation': 'count', 'label': 'Total Number of Invoices'}, {'metric': 'Overdue 60 - 180 Days', 'aggregation': 'sum', 'label': 'Total Overdue (60-180 Days)'}, {'metric': 'Overdue Above 180 Days', 'aggregation': 'sum', 'label': 'Total Overdue (>180 Days)'}]
+charts: <class 'list'> [{'chart_id': 'chart-0', 'type': 'bar', 'x': 'Company Group', 'y': 'Invoice Amount', 'title':'Total Invoiced Amount by Company Group', 'size': '1/2'}, {'chart_id': 'chart-1', 'type': 'bar', 'x': 'Department', 'y': 'Invoice Amount', 'title': 'Total Invoiced Amount by Department', 'size': '1/2'}, {'chart_id': 'chart-2', 'type': 'stacked-bar', 'x': 'Company Group', 'y': 'Balance Amount', 'title': 'Outstanding Balance Distribution by Company Group', 'size': '1/2'}, {'chart_id': 'chart-3', 'type': 'bar', 'x': 'Nature of Services', 'y': 'Invoice Amount', 'title': 'Invoiced Amount by Nature of Services', 'size': '1/2'}, {'chart_id': 'chart-4', 'type': 'bar', 'x': 'Revenue Head', 'y': 'Invoice Amount', 'title': 'Invoiced Amount by Revenue Head', 'size': '1/2'}]
+================================================================================
+================================================================================
+DETAILED AI UI TYPE CHECK
+key_findings: type=<class 'list'>
+  key_findings[0]: type=<class 'str'>
+  key_findings[1]: type=<class 'str'>
+  key_findings[2]: type=<class 'str'>
+data_quality: type=<class 'dict'>
+  data_quality.missing_values: type=<class 'dict'>, value={'Brand Name': 98.12, 'Property Name': 77.31, 'Marsha': 57.62, 'Unnamed: 18': 79.5, 'Nature of Services': 8.25, 'Revenue Head': 8.25, 'Contact Person 
+  data_quality.outliers_detected: type=<class 'bool'>, value=False
+  data_quality.data_completeness: type=<class 'float'>, value=0.875
+  data_quality.recommendation: type=<class 'str'>, value=Investigate the source of the 'Brand Name' and 'Property Name' data gaps. If these fields are not consistently populated, consider removing them from 
+insights: type=<class 'list'>
+  insights[0]: type=<class 'str'>
+  insights[1]: type=<class 'str'>
+  insights[2]: type=<class 'str'>
+  insights[3]: type=<class 'str'>
+recommendations: type=<class 'list'>
+  recommendations[0]: type=<class 'str'>
+  recommendations[1]: type=<class 'str'>
+  recommendations[2]: type=<class 'str'>
+  recommendations[3]: type=<class 'str'>
+filters: type=<class 'list'>
+  filters[0]: type=<class 'dict'>
+      column: type=<class 'str'>, value=Company Group
+      filter_type: type=<class 'str'>, value=dropdown
+      label: type=<class 'str'>, value=Company Group
+  filters[1]: type=<class 'dict'>
+      column: type=<class 'str'>, value=Department
+      filter_type: type=<class 'str'>, value=dropdown
+      label: type=<class 'str'>, value=Department
+  filters[2]: type=<class 'dict'>
+      column: type=<class 'str'>, value=Nature of Services
+      filter_type: type=<class 'str'>, value=dropdown
+      label: type=<class 'str'>, value=Nature of Services
+kpis: type=<class 'list'>
+  kpis[0]: type=<class 'dict'>
+      metric: type=<class 'str'>, value=Invoice Amount
+      aggregation: type=<class 'str'>, value=sum
+      label: type=<class 'str'>, value=Total Invoiced Amount
+  kpis[1]: type=<class 'dict'>
+      metric: type=<class 'str'>, value=Balance Amount
+      aggregation: type=<class 'str'>, value=sum
+      label: type=<class 'str'>, value=Total Outstanding Balance
+  kpis[2]: type=<class 'dict'>
+      metric: type=<class 'str'>, value=Invoice No
+      aggregation: type=<class 'str'>, value=count
+      label: type=<class 'str'>, value=Total Number of Invoices
+  kpis[3]: type=<class 'dict'>
+      metric: type=<class 'str'>, value=Overdue 60 - 180 Days
+      aggregation: type=<class 'str'>, value=sum
+      label: type=<class 'str'>, value=Total Overdue (60-180 Days)
+  kpis[4]: type=<class 'dict'>
+      metric: type=<class 'str'>, value=Overdue Above 180 Days
+      aggregation: type=<class 'str'>, value=sum
+      label: type=<class 'str'>, value=Total Overdue (>180 Days)
+charts: type=<class 'list'>
+  charts[0]: type=<class 'dict'>
+      chart_id: type=<class 'str'>, value=chart-0
+      type: type=<class 'str'>, value=bar
+      x: type=<class 'str'>, value=Company Group
+      y: type=<class 'str'>, value=Invoice Amount
+      title: type=<class 'str'>, value=Total Invoiced Amount by Company Group
+      size: type=<class 'str'>, value=1/2
+  charts[1]: type=<class 'dict'>
+      chart_id: type=<class 'str'>, value=chart-1
+      type: type=<class 'str'>, value=bar
+      x: type=<class 'str'>, value=Department
+      y: type=<class 'str'>, value=Invoice Amount
+      title: type=<class 'str'>, value=Total Invoiced Amount by Department
+      size: type=<class 'str'>, value=1/2
+  charts[2]: type=<class 'dict'>
+      chart_id: type=<class 'str'>, value=chart-2
+      type: type=<class 'str'>, value=stacked-bar
+      x: type=<class 'str'>, value=Company Group
+      y: type=<class 'str'>, value=Balance Amount
+      title: type=<class 'str'>, value=Outstanding Balance Distribution by Company Group
+      size: type=<class 'str'>, value=1/2
+  charts[3]: type=<class 'dict'>
+      chart_id: type=<class 'str'>, value=chart-3
+      type: type=<class 'str'>, value=bar
+      x: type=<class 'str'>, value=Nature of Services
+      y: type=<class 'str'>, value=Invoice Amount
+      title: type=<class 'str'>, value=Invoiced Amount by Nature of Services
+      size: type=<class 'str'>, value=1/2
+  charts[4]: type=<class 'dict'>
+      chart_id: type=<class 'str'>, value=chart-4
+      type: type=<class 'str'>, value=bar
+      x: type=<class 'str'>, value=Revenue Head
+      y: type=<class 'str'>, value=Invoice Amount
+      title: type=<class 'str'>, value=Invoiced Amount by Revenue Head
+      size: type=<class 'str'>, value=1/2
+================================================================================
+STEP 8 - STRUCTURED AI UI CREATED
+SKIPPING INITIAL LOAD
+UPDATE NAVBAR CALLBACK
+SESSION = {'is_authenticated': True, 'username': 'veenash', 'user_id': 2, 'email': 'test@osourceglobal.com', 'name':'veena sharma', 'role_id': 2, 'companies': [{'company_id': 1, 'company_name': 'Test1', 'company_code': '123'}], 'selected_company_id': 1, 'company_id': 1, 'confirmed_dtypes': {'Above 1 year': 'numeric', 'Balance Amount': 'numeric', 'Balance Collection Amount': 'numeric', 'Below 30 Days': 'numeric', 'Brand Name': 'categorical', 'Client Name': 'categorical', 'Company Group': 'categorical', 'Contact Person Name': 'categorical', 'Country': 'categorical', 'Credit NoteIssued': 'numeric', 'Department': 'categorical', 'Due Days': 'numeric', 'Forex Balance Amount': 'numeric', 'GST NO':'numeric', 'Group': 'categorical', 'Invoice Amount': 'numeric', 'Invoice Date': 'temporal', 'Invoice No': 'categorical', 'Manager': 'categorical', 'Marsha': 'categorical', 'Nature of Services': 'categorical', 'Overdue 30 - 60 Days': 'numeric', 'Overdue 60 - 180 Days': 'numeric', 'Overdue Above 180 Days': 'numeric', 'Particulars': 'categorical', 'Partner': 'categorical', 'Project MID': 'categorical', 'Property Name': 'categorical', 'Revenue Head': 'categorical', 'Service': 'categorical', 'Unnamed: 18': 'numeric'}, 'kpi_selections': [{'column': 'Balance Amount', 'aggregation': 'sum', 'label': 'Sum of Balance Amount'}], 'filter_selections': [{'label': 'Filter by Entity', 'column': 'Entity', 'filter_type': 'dropdown'}]}
+PATH = /config
