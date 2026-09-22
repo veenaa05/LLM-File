@@ -1,1 +1,143 @@
+# ============================================================
+# RECENT WORKFORCE TREND vs FORECAST VALIDATION
+# ============================================================
+
+recent_actual = diversity_forecast_df[
+    ["ds", "Total Employees"]
+].tail(24).copy()
+
+recent_actual["Type"] = "Actual"
+
+forecast_check = future_forecast[
+    ["ds", "Total Employees"]
+].copy()
+
+forecast_check["Type"] = "Forecast"
+
+validation_df = pd.concat(
+    [recent_actual, forecast_check],
+    ignore_index=True
+)
+
+# ------------------------------------------------------------
+# RECENT ACTUAL TREND
+# ------------------------------------------------------------
+
+first_recent_actual = recent_actual.iloc[0]["Total Employees"]
+last_actual = recent_actual.iloc[-1]["Total Employees"]
+
+recent_24m_change_pct = (
+    (last_actual - first_recent_actual)
+    / first_recent_actual * 100
+)
+
+# Average monthly change over recent 24 months
+recent_monthly_changes = (
+    recent_actual["Total Employees"]
+    .diff()
+    .dropna()
+)
+
+avg_monthly_change = recent_monthly_changes.mean()
+
+# ------------------------------------------------------------
+# FORECAST TREND
+# ------------------------------------------------------------
+
+first_forecast = future_forecast.iloc[0]["Total Employees"]
+last_forecast = future_forecast.iloc[-1]["Total Employees"]
+
+forecast_6m_change_pct = (
+    (last_forecast - last_actual)
+    / last_actual * 100
+)
+
+forecast_monthly_changes = (
+    future_forecast["Total Employees"]
+    .diff()
+    .dropna()
+)
+
+avg_forecast_monthly_change = (
+    forecast_monthly_changes.mean()
+)
+
+# ------------------------------------------------------------
+# PRINT RESULTS
+# ------------------------------------------------------------
+
+print("============================================================")
+print("RECENT WORKFORCE TREND vs FORECAST VALIDATION")
+print("============================================================")
+
+print(
+    f"Recent 24-month period: "
+    f"{recent_actual['ds'].min().date()} "
+    f"to {recent_actual['ds'].max().date()}"
+)
+
+print(
+    f"Starting workforce: "
+    f"{int(first_recent_actual):,}"
+)
+
+print(
+    f"Latest actual workforce: "
+    f"{int(last_actual):,}"
+)
+
+print(
+    f"Actual 24-month change: "
+    f"{recent_24m_change_pct:.2f}%"
+)
+
+print(
+    f"Average actual monthly change: "
+    f"{avg_monthly_change:.2f} employees"
+)
+
+print()
+
+print(
+    f"First forecast month: "
+    f"{int(first_forecast):,}"
+)
+
+print(
+    f"Final forecast month: "
+    f"{int(last_forecast):,}"
+)
+
+print(
+    f"Forecast 6-month change vs Aug-2026: "
+    f"{forecast_6m_change_pct:.2f}%"
+)
+
+print(
+    f"Average forecast monthly change: "
+    f"{avg_forecast_monthly_change:.2f} employees"
+)
+
+print()
+print("RECENT ACTUALS:")
+display(recent_actual.tail(12))
+
+print()
+print("FORECAST:")
+display(forecast_check)
+
+///:;;((())££
+# ============================================================
+# ACTUAL TREND / FORECAST COMPARISON
+# ============================================================
+
+comparison_df = pd.concat(
+    [
+        recent_actual.tail(12),
+        forecast_check
+    ],
+    ignore_index=True
+)
+
+display(comparison_df)
 
