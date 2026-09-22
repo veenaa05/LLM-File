@@ -1,12 +1,1 @@
-print("=" * 80)
-print("STORE DATA DETAILED TYPE CHECK")
 
-if isinstance(store_data, dict):
-    for key, value in store_data.items():
-        print(
-            f"STORE [{key}] -> "
-            f"type={type(value)}, "
-            f"value={str(value)[:300]}"
-        )
-
-print("=" * 80)
