@@ -1,9 +1,1 @@
-style={
-    'flex': '1',
-    'width': '100%',
-    'padding': '10px 14px',
-    'borderRadius': '6px',
-    'border': f'1px solid {BORDER}',
-    'fontSize': '14px',
-    'boxSizing': 'border-box'
-}
+
