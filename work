@@ -1,15 +1,1 @@
-@app.callback(
-    Output('save-load-modal', 'is_open', allow_duplicate=True),
-    Input('save-dashboard-status', 'children'),
-    State('save-load-modal', 'is_open'),
-    prevent_initial_call=True
-)
-def close_save_modal_after_success(status, is_open):
-
-    if (
-        isinstance(status, str)
-        and "saved successfully" in status.lower()
-    ):
-        return False
-
-    return is_open
+\
