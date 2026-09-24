@@ -1,1 +1,20 @@
+# Multi-select dropdown
+if isinstance(filter_value, list):
 
+    # Empty selection or All = no filtering
+    if not filter_value or "All" in filter_value:
+        continue
+
+    filtered_df = filtered_df[
+        filtered_df[col].astype(str).isin(
+            [str(v) for v in filter_value]
+        )
+    ]
+
+# Single-select fallback
+else:
+
+    if filter_value and filter_value != "All":
+        filtered_df = filtered_df[
+            filtered_df[col].astype(str) == str(filter_value)
+        ]
