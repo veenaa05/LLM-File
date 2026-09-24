@@ -1,1 +1,32 @@
+# Apply filters to dataframe
+filtered_df = df.copy()
 
+if filter_selections and filter_values:
+    for filter_sel, filter_value in zip(filter_selections, filter_values):
+
+        col = filter_sel.get('column', '')
+
+        if not col or col not in filtered_df.columns:
+            continue
+
+        # Multi-select dropdown returns a list
+        if isinstance(filter_value, list):
+
+            # Empty selection or "All" means no filtering
+            if not filter_value or "All" in filter_value:
+                continue
+
+            # Keep rows matching ANY selected value
+            filtered_df = filtered_df[
+                filtered_df[col].astype(str).isin(
+                    [str(v) for v in filter_value]
+                )
+            ]
+
+        # Backward compatibility for single-select values
+        else:
+
+            if filter_value and filter_value != "All":
+                filtered_df = filtered_df[
+                    filtered_df[col].astype(str) == str(filter_value)
+                ]
