@@ -1,1 +1,39 @@
+# Create filter controls
+    filter_controls = []
+
+    # Defensive check: ensure filter_selections is a list of dicts
+    if not isinstance(filter_selections, list):
+        print(f"[WARN] filter_selections is not a list: {type(filter_selections)}")
+        filter_selections = []
+
+    for filter_sel in filter_selections:
+        try:
+            if not isinstance(filter_sel, dict):
+                print(f"[WARN] filter_sel is not a dict: {type(filter_sel)}")
+                continue
+            col = filter_sel.get('column', '')
+            label = filter_sel.get('label', col)
+            filter_type = filter_sel.get('filter_type', 'dropdown')
+
+            if not col or col not in df.columns:
+                continue
+
+            if filter_type == 'dropdown':
+                # Get unique values for dropdown
+                filter_values = ["All"] + sorted(df[col].dropna().unique().astype(str).tolist())
+
+                filter_control = html.Div([
+                    html.Label(label, style={'fontWeight': 'bold', 'fontSize': '14px', 'color': TEXT}),
+                    dcc.Dropdown(
+                        id={'type': 'filter-dropdown', 'index': col},
+                        options=[{'label': v, 'value': v} for v in filter_values],
+                        value="All",
+                        clearable=False,
+                        style={'width': '100%'}
+                    ),
+                ], style={'flex': '1', 'marginRight': '15px'})
+
+                filter_controls.append(filter_control)
+        except Exception as e:
+            print(f"[ERROR] Failed to create filter control: {type(e).__name__}: {str(e)[:100]}")
 
