@@ -1,152 +1,157 @@
-"""Page 1: Data Review - Confirm/correct data types before configuration"""
+"""Data profiling and analysis"""
 import pandas as pd
-from dash import html, dcc, Input, Output, State, callback, ALL
-import dash_bootstrap_components as dbc
-from core.config import PRIMARY_BG, CARD_BG, TEXT, TEXT_LIGHT, BORDER, PRIMARY, SUCCESS
-from core.data_profiler import DataProfiler
-from core.session_state import SessionState
+import numpy as np
+from dataclasses import dataclass
+from typing import Dict, Optional, List
 
-def generate_data_review_page(df: pd.DataFrame, profiles: dict) -> html.Div:
-    """
-    Generate the data review page layout
-    Shows all columns with detected types and allows user to override types
-    """
+@dataclass
+class ColumnProfile:
+    """Profile of a single column"""
+    name: str
+    dtype: str                    # 'numeric', 'categorical', 'temporal', 'boolean', 'mixed'
+    cardinality: int             # unique value count
+    missing_pct: float           # % of NaN
+    is_key_field: bool           # Primary key candidate?
+    value_range: Optional[tuple] # (min, max) for numeric
+    top_values: list             # Top 5-10 categories
+    is_temporal: bool
+    variance: Optional[float]    # For numeric
+    skewness: Optional[float]    # Distribution shape
+    has_outliers: bool
 
-    # Build table rows
-    
-    table_rows = []
+    def __repr__(self):
+        return f"{self.name} ({self.dtype}, card={self.cardinality})"
 
-    for col_name, profile in sorted(profiles.items()):
-        # Handle both object and dict formats
-        if isinstance(profile, dict):
-            # Profile is a dictionary (from dcc.Store)
-            top_values = profile.get('top_values', [])
-            dtype = profile.get('dtype', 'categorical')
-            cardinality = profile.get('cardinality', 0)
-            missing_pct = profile.get('missing_pct', 0)
+class DataProfiler:
+    """Analyze dataset and generate column profiles"""
+
+    def profile(self, df: pd.DataFrame) -> Dict[str, ColumnProfile]:
+        """Analyze each column and return profiles"""
+        profiles = {}
+
+        for col in df.columns:
+            series = df[col]
+            dtype = self._detect_type(series)
+            cardinality = series.nunique()
+            denominator = max(len(series), 1)
+            missing_pct = series.isna().sum() / denominator * 100
+
+            # Numeric column analysis
+            if dtype == 'numeric':
+                # Convert to numeric if not already (handle thousands separators)
+                if not pd.api.types.is_numeric_dtype(series):
+                    try:
+                        cleaned = series.astype(str).str.strip().str.replace(',', '').str.replace(' ', '')
+                        numeric_series = pd.to_numeric(cleaned, errors='coerce')
+                    except:
+                        numeric_series = pd.to_numeric(series, errors='coerce')
+                else:
+                    numeric_series = series
+
+                if numeric_series.notna().any():
+                    value_range = (
+                        float(numeric_series.min()),
+                        float(numeric_series.max())
+                    )
+                else:
+                    value_range = None
+                variance = float(numeric_series.var()) if numeric_series.var() > 0 else 0
+                skewness = float(numeric_series.skew()) if not numeric_series.empty else 0
+                has_outliers = self._detect_outliers_iqr(numeric_series)
+            else:
+                value_range = None
+                variance = None
+                skewness = None
+                has_outliers = False
+
+            is_temporal = self._is_temporal(series)
+            top_values = (
+                        series.value_counts().head(10).index.astype(str).tolist()
+                        if cardinality > 1 and len(series) > 0
+                        else []
+                    )
+            profiles[col] = ColumnProfile(
+                name=col,
+                dtype=dtype,
+                cardinality=cardinality,
+                missing_pct=missing_pct,
+                is_key_field=cardinality == len(df),  # Unique per row
+                value_range=value_range,
+                top_values=top_values,
+                is_temporal=is_temporal,
+                variance=variance,
+                skewness=skewness,
+                has_outliers=has_outliers,
+            )
+
+        return profiles
+
+    def _detect_type(self, series: pd.Series) -> str:
+        """Detect column type"""
+        if pd.api.types.is_numeric_dtype(series):
+            return 'numeric'
+        elif pd.api.types.is_datetime64_any_dtype(series):
+            return 'temporal'
+        elif pd.api.types.is_bool_dtype(series):
+            return 'boolean'
         else:
-            # Profile is an object
-            top_values = profile.top_values
-            dtype = profile.dtype
-            cardinality = profile.cardinality
-            missing_pct = profile.missing_pct
+            # Try to detect numeric-looking string columns
+            if series.dtype in ('object', 'str'):
+                try:
+                    # Try to convert to numeric, handling thousands separators
+                    cleaned = series.astype(str).str.strip().str.replace(r'[^\d.\-+eE]', '', regex=True)
+                    numeric_series = pd.to_numeric(cleaned, errors='coerce')
+                    # If >70% of values convert to numeric, it's a numeric column
+                    if numeric_series.notna().sum() / max(len(series), 1) > 0.7:
+                        return 'numeric'
+                except:
+                    pass
 
-        # Get sample value
-        sample_val = str(top_values[0]) if top_values else "N/A"
-        # Format cardinality and missing info
-        cardinality_text = f"{cardinality:,}" if cardinality else "0"
-        missing_text = f"{missing_pct:.1f}%"
+            return 'categorical'
 
-        # Create type selector dropdown
-        type_selector = dcc.Dropdown(
-            id={'type': 'dtype-selector', 'index': col_name},
-            options=[
-                {'label': 'numeric', 'value': 'numeric'},
-                {'label': 'categorical', 'value': 'categorical'},
-                {'label': 'temporal', 'value': 'temporal'},
-                {'label': 'ignore', 'value': 'ignore'},
-            ],
-            value=dtype,
-            clearable=False,
-            className='data-review-dropdown',
-            style={
-                'width': '100%',
-                'fontSize': '14px',
-            }
-        )
+    def _is_temporal(self, series: pd.Series) -> bool:
+        """Check if column is temporal"""
+        # Check if already datetime
+        if pd.api.types.is_datetime64_any_dtype(series):
+            return True
 
-        # Create table row
-        row = html.Tr([
-            html.Td(col_name, style={'fontWeight': 'bold', 'padding': '12px'}),
-            html.Td(dtype, style={'padding': '12px', 'color': TEXT_LIGHT}),
-            html.Td(sample_val, style={'padding': '12px', 'fontSize': '12px', 'color': TEXT_LIGHT}),
-            html.Td(cardinality_text, style={'padding': '12px', 'textAlign': 'right', 'color': TEXT_LIGHT}),
-            html.Td(missing_text, style={'padding': '12px', 'textAlign': 'right', 'color': TEXT_LIGHT}),
-            html.Td(type_selector, className='data-review-type-cell', style={'padding': '12px', 'width': '180px', 'minWidth': '180px', 'verticalAlign': 'middle', 'overflow': 'visible', 'position': 'relative',}),
-        ])
+        # Check if string column (object or str dtype)
+        if series.dtype in ('object', 'str') or pd.api.types.is_string_dtype(series):
+            col_lower = series.name.lower()
+            # Check for date-related keywords
+            if any(keyword in col_lower for keyword in ['date', 'time', 'created', 'posted', 'parking', 'inward', 'invoice']):
+                # Check if values can be parsed as dates
+                try:
+                    parsed = pd.to_datetime(series, errors='coerce')
+                    if len(parsed) > 0 and parsed.notna().sum() / len(parsed) > 0.5:
+                        return True
+                except:
+                    pass
 
-        table_rows.append(row)
+        return False
 
-    # Count numeric columns (handle both dict and object formats)
-    numeric_count = 0
-    for prof in profiles.values():
-        prof_dtype = prof.get('dtype') if isinstance(prof, dict) else prof.dtype
-        if prof_dtype == 'numeric':
-            numeric_count += 1
+    def _detect_outliers_iqr(self, series: pd.Series) -> bool:
+        """Detect outliers using IQR method"""
+        try:
+            Q1 = series.quantile(0.25)
+            Q3 = series.quantile(0.75)
+            IQR = Q3 - Q1
+            return ((series < Q1 - 1.5 * IQR) | (series > Q3 + 1.5 * IQR)).any()
+        except:
+            return False
 
-    # Create main layout
-    layout = html.Div([
-        # Header
-        html.Div([
-            html.H1("Data Review", style={'fontSize': '28px', 'fontWeight': 'bold', 'color': TEXT}),
-            html.P(
-                "Review detected data types and make corrections before configuring your dashboard. "
-                "Select the appropriate type for each column.",
-                style={'color': TEXT_LIGHT, 'marginBottom': '20px'}
-            ),
-        ], style={'marginBottom': '30px'}),
+def get_key_metrics(profiles: Dict[str, ColumnProfile]) -> List[str]:
+    """Identify likely metric columns (numeric, not IDs)"""
+    metrics = []
+    for name, profile in profiles.items():
+        if profile.dtype == 'numeric' and not profile.is_key_field and profile.missing_pct < 50:
+            metrics.append(name)
+    return metrics
 
-        # Data Statistics Summary
-        html.Div([
-            html.Div([
-                html.Div([
-                    html.Div(f"{len(df):,}", style={'fontSize': '24px', 'fontWeight': 'bold', 'color': PRIMARY}),
-                    html.Div("Records", style={'color': TEXT_LIGHT, 'fontSize': '12px', 'marginTop': '5px'}),
-                ], style={'padding': '15px', 'flex': '1'}),
-                html.Div([
-                    html.Div(f"{len(profiles)}", style={'fontSize': '24px', 'fontWeight': 'bold', 'color': PRIMARY}),
-                    html.Div("Columns", style={'color': TEXT_LIGHT, 'fontSize': '12px', 'marginTop': '5px'}),
-                ], style={'padding': '15px', 'flex': '1', 'borderLeft': f'1px solid {BORDER}'}),
-                html.Div([
-                    html.Div(f"{numeric_count}",
-                             style={'fontSize': '24px', 'fontWeight': 'bold', 'color': SUCCESS}),
-                    html.Div("Numeric", style={'color': TEXT_LIGHT, 'fontSize': '12px', 'marginTop': '5px'}),
-                ], style={'padding': '15px', 'flex': '1', 'borderLeft': f'1px solid {BORDER}'}),
-            ], style={'display': 'flex', 'background': CARD_BG, 'borderRadius': '8px', 'marginBottom': '30px',
-                      'border': f'1px solid {BORDER}'}),
-        ]),
-
-        # Data Type Review Table
-        html.Div([
-            html.Div("Column Type Configuration", style={'fontSize': '16px', 'fontWeight': 'bold',
-                                                          'color': TEXT, 'marginBottom': '15px'}),
-            html.Table([
-                html.Thead(html.Tr([
-                    html.Th("Column Name", style={'padding': '12px', 'textAlign': 'left', 'fontSize': '14px',
-                                                   'fontWeight': 'bold', 'borderBottom': f'2px solid {PRIMARY}'}),
-                    html.Th("Detected Type", style={'padding': '12px', 'textAlign': 'left', 'fontSize': '14px',
-                                                    'fontWeight': 'bold', 'borderBottom': f'2px solid {PRIMARY}'}),
-                    html.Th("Sample Value", style={'padding': '12px', 'textAlign': 'left', 'fontSize': '14px',
-                                                   'fontWeight': 'bold', 'borderBottom': f'2px solid {PRIMARY}'}),
-                    html.Th("Cardinality", style={'padding': '12px', 'textAlign': 'right', 'fontSize': '14px',
-                                                  'fontWeight': 'bold', 'borderBottom': f'2px solid {PRIMARY}'}),
-                    html.Th("Missing %", style={'padding': '12px', 'textAlign': 'right', 'fontSize': '14px',
-                                                'fontWeight': 'bold', 'borderBottom': f'2px solid {PRIMARY}'}),
-                    html.Th("Confirmed Type", style={'padding': '12px', 'textAlign': 'center', 'fontSize': '14px',
-                                                     'fontWeight': 'bold', 'borderBottom': f'2px solid {PRIMARY}'}),
-                ])),
-                html.Tbody(table_rows),
-            ],  className='data-review-table',
-                style={'width': '100%', 'borderCollapse': 'collapse', 'overflow': 'visible',}),
-        ], style={'background': CARD_BG, 'padding': '20px', 'borderRadius': '8px', 'marginBottom': '30px',
-                  'border': f'1px solid {BORDER}'}),
-
-        # Navigation Buttons
-        html.Div([
-            dcc.Link(
-                dbc.Button("← Back", outline=True, color="secondary",
-                           style={'padding': '10px 20px', 'fontSize': '14px'}),
-                href='/',
-                style={'textDecoration': 'none'}
-            ),
-            dcc.Link(
-                dbc.Button("Confirm & Continue →", color="primary",
-                           style={'padding': '10px 20px', 'fontSize': '14px'}),
-                href='/config',
-                style={'textDecoration': 'none'}
-            ),
-        ], style={'display': 'flex', 'justifyContent': 'space-between', 'marginTop': '30px'}),
-
-    ], style={'padding': '30px', 'maxWidth': '1200px', 'margin': '0 auto', 'background': PRIMARY_BG, 'minHeight': '100vh'})
-
-    return layout
+def get_filter_candidates(profiles: Dict[str, ColumnProfile]) -> List[str]:
+    """Identify likely filter columns (low cardinality categorical)"""
+    candidates = []
+    for name, profile in profiles.items():
+        if profile.dtype == 'categorical' and 2 < profile.cardinality < 50 and not profile.is_key_field:
+            candidates.append(name)
+    return candidates
