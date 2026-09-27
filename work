@@ -1,1 +1,85 @@
+def _detect_type(self, series: pd.Series) -> str:
+    """Detect column type"""
 
+    # Native numeric columns
+    if pd.api.types.is_numeric_dtype(series):
+        return 'numeric'
+
+    # Native datetime columns
+    elif pd.api.types.is_datetime64_any_dtype(series):
+        return 'temporal'
+
+    # Boolean columns
+    elif pd.api.types.is_bool_dtype(series):
+        return 'boolean'
+
+    # String/object columns
+    else:
+        if series.dtype in ('object', 'str') or pd.api.types.is_string_dtype(series):
+
+            # Remove null/blank values for type detection
+            non_null = series.dropna().astype(str).str.strip()
+            non_null = non_null[non_null != ""]
+
+            if len(non_null) == 0:
+                return 'categorical'
+
+            # ---------------------------------------------------------
+            # Check for ALPHANUMERIC values first
+            # Example:
+            # ABC123
+            # EMP001
+            # INV-1001
+            # 123ABC
+            # A12345
+            # ---------------------------------------------------------
+            alphanumeric_mask = non_null.str.contains(
+                r'[A-Za-z]',
+                regex=True
+            ) & non_null.str.contains(
+                r'\d',
+                regex=True
+            )
+
+            alphanumeric_count = alphanumeric_mask.sum()
+
+            # If a meaningful portion of values contains both
+            # letters and numbers, classify the column as alphanumeric.
+            if alphanumeric_count > 0:
+                alphanumeric_pct = alphanumeric_count / len(non_null)
+
+                if alphanumeric_pct >= 0.3:
+                    return 'alphanumeric'
+
+            # ---------------------------------------------------------
+            # Numeric-looking string columns
+            # Example:
+            # "123"
+            # "456.78"
+            # "1,000"
+            # "-500"
+            # ---------------------------------------------------------
+            try:
+                cleaned = (
+                    non_null
+                    .str.replace(',', '', regex=False)
+                    .str.replace(' ', '', regex=False)
+                )
+
+                numeric_series = pd.to_numeric(
+                    cleaned,
+                    errors='coerce'
+                )
+
+                numeric_pct = (
+                    numeric_series.notna().sum() /
+                    max(len(non_null), 1)
+                )
+
+                if numeric_pct > 0.7:
+                    return 'numeric'
+
+            except Exception:
+                pass
+
+        return 'categorical'
