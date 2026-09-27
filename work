@@ -1,2 +1,22 @@
-Config page:If we click on back to data review from config page user is getting logged out
-Data Review page: If we click on back button from data review page user is getting logged out
+# Hidden stores (note: store-kpi-selections and store-filter-selections are defined in main app.layout)
+        dcc.Store(id='store-confirmed-dtypes-from-review', data=confirmed_dtypes),
+
+        # Navigation Buttons
+        html.Div([
+            dcc.Link(
+                dbc.Button("← Back to Data Review", outline=True, color="secondary",
+                           style={'padding': '10px 20px', 'fontSize': '14px'}),
+                href='/',
+                style={'textDecoration': 'none'}
+            ),
+            dcc.Link(
+                dbc.Button("Generate Dashboard →", color="primary",
+                           style={'padding': '10px 20px', 'fontSize': '14px'}),
+                href='/dashboard',
+                style={'textDecoration': 'none'}
+            ),
+        ], style={'display': 'flex', 'justifyContent': 'space-between', 'marginTop': '30px'}),
+
+    ], style={'padding': '30px', 'maxWidth': '1200px', 'margin': '0 auto', 'background': PRIMARY_BG, 'minHeight': '100vh'})
+
+    return layout
