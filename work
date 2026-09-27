@@ -1,257 +1,266 @@
-"""
-Upload Page - File upload and data preview (with Database Connection tab)
-"""
-import dash_bootstrap_components as dbc
-from dash import html, dcc
-from core.config import PRIMARY_BG, CARD_BG, TEXT, TEXT_LIGHT, BORDER, PRIMARY, SPACING_LG, SPACING_MD, TEXT_MUTED, NAVY, GOLD
+ @app.callback(
+        Output('upload-status', 'children'),
+        Output('preview-container', 'children'),
+        Output('store-upload-id', 'data'),
+        Input('upload-data', 'contents'),
+        Input('upload-data', 'filename'),
+        State('session-state', 'data'),
+        prevent_initial_call=True
+    )
+    def handle_file_upload(contents, filename, session_data):
+        """Parse upload, run full data profiling, show analysis panel"""
+        if not contents or not filename:
+            return "", [], None
 
+        try:
+            from core.file_handler import FileHandler
+            from core.data_profiler import DataProfiler
+            from core.cache_manager import CacheManager
+            import numpy as np
 
-def generate_upload_page():
-    """Generate file upload page — two source tabs: File Upload and Database"""
+            df = FileHandler.parse_file(contents, filename)
+            is_valid, error_msg = FileHandler.validate_dataframe(df)
+            if not is_valid:
+                return dbc.Alert(error_msg, color="danger"), [], None
 
-    TAB_STYLE = {
-        'padding': '10px 24px', 'fontSize': '13px', 'fontWeight': '600',
-        'borderRadius': '6px 6px 0 0', 'cursor': 'pointer',
-    }
-    ACTIVE_TAB_STYLE = {**TAB_STYLE, 'backgroundColor': NAVY, 'color': '#FFFFFF',
-                        'borderBottom': f'3px solid {GOLD}'}
+            # Save to cache immediately — avoids large dcc.Store serialisation
+            upload_id, profiles_obj = CacheManager.save_upload(df, filename)
+            print(f"[OK] Upload saved: {upload_id} ({len(df):,} rows)")
+            
+            user_id = (session_data or {}).get("user_id")
 
-    file_tab = dbc.Tab(label="📂 File Upload", tab_id="tab-file", label_style=TAB_STYLE,
-                    active_label_style=ACTIVE_TAB_STYLE, children=[
-        html.Div([
-                    html.P(
-                        "Upload a CSV or Excel file to analyse with AI-powered dashboard generation. "
-                        "Data will be automatically profiled and visualized.",
-                        style={'fontSize': '14px', 'color': TEXT_LIGHT, 'marginBottom': '20px'}
-                    ),
+            if not user_id:
+                print("[ERROR] User session not found")
+                return dbc.Alert("User session not found", color="danger"), [], None
+            
+            # ==========================
+            # SAVE UPLOAD RECORD TO DB
+            # ==========================
 
-                    dcc.Loading(
-                        type="circle",
-                        children=dcc.Upload(
-                            id='upload-data',
-                            children=html.Div([
-                                html.Div("Drag and drop or ", style={'display': 'inline'}),
-                                html.A("select a file", style={'fontWeight': 'bold', 'color': PRIMARY}),
-                                html.Div(
-                                    "CSV, XLS, XLSX — max 50 MB",
-                                    style={'fontSize': '12px', 'color': '#9CA3AF', 'marginTop': '4px'}
-                                )
-                            ]),
-                            style={
-                                'width': '100%',
-                                'height': '160px',
-                                'lineHeight': '60px',
-                                'borderWidth': '2px',
-                                'borderStyle': 'dashed',
-                                'borderRadius': '8px',
-                                'textAlign': 'center',
-                                'cursor': 'pointer',
-                                'backgroundColor': PRIMARY_BG,
-                                'borderColor': PRIMARY,
-                            },
-                            multiple=False
-                        )
-                    ),
+            from core.app_db import Upload
+            from core.db_connector import get_session
 
-                    #  FIXED (correct structure)
-                    html.Div(
-                        id='upload-status',
-                        style={'marginTop': '12px', 'fontSize': '14px'},
-                        children=html.Div(
-                            "Maximum file size: 50 MB",
-                            style={'color': '#9CA3AF', 'fontSize': '12px'}
-                        )
-                    ),
-                ], style={'padding': '24px'})
-                    ])
+            session = get_session()
 
-    db_tab = dbc.Tab(
-                label="🗄️ Database",
-                tab_id="tab-db",
-                label_style=TAB_STYLE,
-                active_label_style=ACTIVE_TAB_STYLE,
-                children=[
-
-                    html.Div([
-
-                        html.P(
-                            "Connect directly to a database and fetch a table or view into the dashboard.",
-                            style={'fontSize': '14px', 'color': TEXT_LIGHT, 'marginBottom': '20px'}
-                        ),
-
-                        #  CONNECTION FORM
-                        html.Div([
-
-                            html.Div("CONNECTION SETTINGS", style={
-                                'fontSize': '10px',
-                                'fontWeight': '700',
-                                'letterSpacing': '0.1em',
-                                'color': TEXT_LIGHT,
-                                'marginBottom': '12px',
-                            }),
-
-                            #  TOP ROW
-                            html.Div([
-                                html.Div([
-                                    html.Label("Database Type"),
-                                    dcc.Dropdown(
-                                        id='db-type-dropdown',
-                                        options=[
-                                            {'label': 'PostgreSQL', 'value': 'postgresql'},
-                                            {'label': 'MySQL', 'value': 'mysql'},
-                                            {'label': 'SQL Server (MSSQL)', 'value': 'mssql'},
-                                            {'label': 'SQLite', 'value': 'sqlite'},
-                                            {'label': 'Oracle', 'value': 'oracle'},
-                                        ],
-                                        value='postgresql',
-                                        clearable=False
-                                    )
-                                ], style={'flex': 1}),
-
-                                html.Div([
-                                    html.Label("Host / File Path"),
-                                    dcc.Input(id='db-host', type='text', placeholder='localhost')
-                                ], style={'flex': 2}),
-
-                                html.Div([
-                                    html.Label("Port"),
-                                    dcc.Input(id='db-port', type='number', placeholder='5432')
-                                ], style={'flex': 1}),
-
-                                html.Div([
-                                    html.Label("Database Name"),
-                                    dcc.Input(id='db-name', type='text', placeholder='mydb')
-                                ], style={'flex': 2}),
-
-                            ], style={'display': 'flex', 'gap': '10px', 'marginBottom': '10px'}),
-
-                            #  SECOND ROW
-                            html.Div([
-                                html.Div([
-                                    html.Label("Username"),
-                                    dcc.Input(id='db-username', type='text')
-                                ], style={'flex': 1}),
-
-                                html.Div([
-                                    html.Label("Password"),
-                                    dcc.Input(id='db-password', type='password')
-                                ], style={'flex': 1}),
-
-                                html.Div([
-                                    html.Label(" "),
-                                    dbc.Button(
-                                        "Test Connection",
-                                        id='btn-test-db',
-                                        size='sm',
-                                        style={'backgroundColor': NAVY, 'color': '#fff'}
-                                    )
-                                ])
-                            ], style={'display': 'flex', 'gap': '10px', 'marginBottom': '10px'}),
-
-                            #  CONNECTION STATUS WITH LOADING
-                            dcc.Loading(
-                                type="circle",
-                                children=html.Div(
-                                    id='db-connection-status',
-                                    style={'marginTop': '10px'}
-                                )
-                            )
-
-                        ], style={
-                            'backgroundColor': '#F8FAFF',
-                            'padding': '16px',
-                            'borderRadius': '6px',
-                            'border': f'1px solid {BORDER}',
-                            'marginBottom': '20px'
-                        }),
-
-                        #  DATA FETCH SECTION
-                        html.Div(
-                            id='db-table-section',
-                            style={'display': 'none'},
-                            children=[
-
-                                html.Div([
-                                    html.Label("Table / View"),
-                                    dcc.Dropdown(
-                                        id='db-table-dropdown',
-                                        # multi=True,
-                                        options=[],
-                                        placeholder='Select table…'
-                                    )
-                                ], style={'marginBottom': '10px'}),
-
-                                html.Div([
-                                    html.Label("Row Limit"),
-                                    dcc.Input(
-                                        id='db-row-limit',
-                                        type='number',
-                                        value=100000,
-                                        min=100,
-                                        max=1000000
-                                    )
-                                ], style={'marginBottom': '10px'}),
-
-                                dbc.Button(
-                                    "Fetch Data →",
-                                    id='btn-fetch-db',
-                                    size='lg',
-                                    style={
-                                        'backgroundColor': NAVY,
-                                        'borderColor': NAVY,
-                                        'color': '#fff',
-                                        'fontWeight': '700'
-                                    }
-                                ),
-
-                                # FETCH STATUS WITH LOADING
-                                dcc.Loading(
-                                    type="circle",
-                                    children=html.Div(
-                                        id='db-fetch-status',
-                                        style={'marginTop': '10px'}
-                                    )
-                                )
-                            ]
-                        )
-
-                    ], style={'padding': '24px'})
-                ]
+            upload = Upload(
+                user_id=user_id,  # TEMPORARY - replace later with logged-in user
+                source_type="excel",
+                source_name=filename,
+                row_count=len(df),
+                column_count=len(df.columns),
+                upload_path=f".cache/user_uploads/{upload_id}.pkl",
+                profiles_path=f".cache/user_uploads/{upload_id}-profiles.json",
+                status="ready"
             )
 
-    return dbc.Container([
-        dbc.Row([
-            dbc.Col([
-                html.H2("Data Source", className="mb-1",
-                        style={'color': NAVY, 'fontWeight': '700', 'fontSize': '26px'}),
-                html.P("Upload a file or connect to a database to begin.",
-                    style={'color': TEXT_LIGHT, 'marginBottom': '20px', 'fontSize': '14px'}),
+            session.add(upload)
+            session.commit()
 
-                dbc.Tabs(
-                    [file_tab, db_tab],
-                    id='upload-source-tabs',
-                    active_tab='tab-file',
-                    style={'borderBottom': f'2px solid {BORDER}', 'marginBottom': '0'},
-                ),
-                html.Div([
-                    dcc.Store(id='db-engine-store', data=None),
-                    #  Store upload_id for later use (dashboard save)
-                    dcc.Store(id='upload-id-store', data=None),
-                    #  Preview section with loading spinner
-                    dcc.Loading(
-                        type="circle",
-                        children=html.Div(
-                            id='preview-container',
-                            style={'marginTop': '20px'}
-                        )
-                    ),
-                    #  Confirmation UI (no spinner needed usually)
-                    html.Div(
-                        id='confirm-container',
-                        style={'marginTop': '20px'}
-                    ),
+            db_upload_id = upload.upload_id
+            
+            print(f"[DB] Upload ID: {upload.upload_id}")
+            print(f"[DB] Upload record created: {db_upload_id}")
+                        
+            # Run full profiler for display
+            profiler = DataProfiler()
+            profiles = profiler.profile(df)
+
+            # Classify columns
+            numeric_cols   = [n for n, p in profiles.items() if p.dtype == 'numeric']
+            categorical_cols = [n for n, p in profiles.items() if p.dtype == 'categorical']
+            temporal_cols  = [n for n, p in profiles.items() if p.is_temporal]
+            boolean_cols   = [n for n, p in profiles.items() if p.dtype == 'boolean']
+
+            # Data quality
+            total_cells = df.shape[0] * df.shape[1]
+            missing_cells = df.isnull().sum().sum()
+            completeness = round((1 - missing_cells / total_cells) * 100, 1) if total_cells else 100
+            dup_rows = df.duplicated().sum()
+
+            # Memory
+            mem_mb = round(df.memory_usage(deep=True).sum() / 1024**2, 2)
+
+            # ── STAT CARD builder ─────────────────────────────
+            def stat_card(label, value, sub="", color=NAVY, bg="#EBF4FF"):
+                return html.Div([
+                    html.Div(str(value), style={
+                        'fontSize': '26px', 'fontWeight': '800', 'color': color, 'lineHeight': '1',
+                    }),
+                    html.Div(label, style={
+                        'fontSize': '11px', 'fontWeight': '700', 'textTransform': 'uppercase',
+                        'letterSpacing': '0.07em', 'color': TEXT_LIGHT, 'marginTop': '4px',
+                    }),
+                    html.Div(sub, style={'fontSize': '11px', 'color': TEXT_LIGHT, 'marginTop': '2px'}) if sub else None,
+                ], style={
+                    'backgroundColor': bg, 'border': f'1px solid {BORDER}',
+                    'borderTop': f'3px solid {color}', 'borderRadius': '6px',
+                    'padding': '14px 16px', 'flex': '1', 'minWidth': '110px',
+                })
+
+            # ── COLUMN PROFILE ROW builder ────────────────────
+            def profile_row(name, p, idx):
+                badge_color = {
+                    'numeric': '#1A365D', 'categorical': '#065F46',
+                    'temporal': '#7C3AED', 'boolean': '#92400E',
+                }.get(p.dtype, '#374151')
+                badge_bg = {
+                    'numeric': '#EBF4FF', 'categorical': '#D1FAE5',
+                    'temporal': '#EDE9FE', 'boolean': '#FEF3C7',
+                }.get(p.dtype, '#F3F4F6')
+
+                top_vals = ", ".join(str(v) for v in (p.top_values or [])[:3])
+                missing_pct = round(p.missing_pct, 1)
+                quality_color = '#DC2626' if missing_pct > 20 else '#D97706' if missing_pct > 5 else '#16A34A'
+
+                return html.Tr([
+                    html.Td(html.Span(name, style={'fontWeight': '600', 'color': NAVY, 'fontSize': '12px'}),
+                            style={'padding': '8px 12px', 'borderBottom': f'1px solid {BORDER}',
+                                   'backgroundColor': '#F8FAFF' if idx % 2 == 0 else '#FFFFFF'}),
+                    html.Td(html.Span(p.dtype.upper(), style={
+                        'fontSize': '10px', 'fontWeight': '700', 'padding': '2px 8px',
+                        'borderRadius': '10px', 'color': badge_color, 'backgroundColor': badge_bg,
+                        'border': f'1px solid {badge_color}22',
+                    }), style={'padding': '8px 12px', 'borderBottom': f'1px solid {BORDER}',
+                               'backgroundColor': '#F8FAFF' if idx % 2 == 0 else '#FFFFFF'}),
+                    html.Td(f"{p.cardinality:,}", style={
+                        'padding': '8px 12px', 'fontSize': '12px', 'color': TEXT,
+                        'borderBottom': f'1px solid {BORDER}',
+                        'backgroundColor': '#F8FAFF' if idx % 2 == 0 else '#FFFFFF'}),
+                    html.Td(html.Span(f"{missing_pct}%", style={'color': quality_color, 'fontWeight': '600', 'fontSize': '12px'}),
+                            style={'padding': '8px 12px', 'borderBottom': f'1px solid {BORDER}',
+                                   'backgroundColor': '#F8FAFF' if idx % 2 == 0 else '#FFFFFF'}),
+                    html.Td(html.Span(top_vals or "—", style={'fontSize': '11px', 'color': TEXT_LIGHT}),
+                            style={'padding': '8px 12px', 'borderBottom': f'1px solid {BORDER}',
+                                   'backgroundColor': '#F8FAFF' if idx % 2 == 0 else '#FFFFFF',
+                                   'maxWidth': '200px', 'overflow': 'hidden', 'textOverflow': 'ellipsis'}),
                 ])
-            ], width=12, lg=10, className="mx-auto")
-        ], className="mt-4 mb-5"),
-    ], fluid=True, style={'backgroundColor': PRIMARY_BG, 'minHeight': '100vh', 'padding': '20px'})
 
+            TH_STYLE = {
+                'fontSize': '10px', 'fontWeight': '700', 'textTransform': 'uppercase',
+                'letterSpacing': '0.07em', 'padding': '10px 12px',
+                'backgroundColor': NAVY, 'color': '#FFFFFF',
+                'borderBottom': f'2px solid {GOLD}',
+            }
+
+            profile_table = html.Table([
+                html.Thead(html.Tr([
+                    html.Th("Column", style=TH_STYLE),
+                    html.Th("Type", style=TH_STYLE),
+                    html.Th("Unique Values", style=TH_STYLE),
+                    html.Th("Missing", style=TH_STYLE),
+                    html.Th("Top Values", style=TH_STYLE),
+                ])),
+                html.Tbody([
+                    profile_row(name, p, idx)
+                    for idx, (name, p) in enumerate(profiles.items())
+                ]),
+            ], style={
+                'width': '100%', 'borderCollapse': 'collapse',
+                'border': f'1px solid {BORDER}', 'borderRadius': '6px',
+            })
+
+            analysis_panel = html.Div([
+                # ── Header ─────────────────────────────────────
+                html.Div([
+                    html.Div([
+                        html.Span("DATA INTELLIGENCE REPORT", style={
+                            'fontSize': '10px', 'fontWeight': '700', 'letterSpacing': '0.12em',
+                            'color': GOLD, 'display': 'block', 'marginBottom': '4px',
+                        }),
+                        html.H3(filename, style={'color': '#FFFFFF', 'fontWeight': '700', 'margin': '0', 'fontSize': '18px'}),
+                    ]),
+                ], style={
+                    'backgroundColor': NAVY, 'padding': '20px 24px',
+                    'borderRadius': '8px 8px 0 0', 'borderBottom': f'3px solid {GOLD}',
+                }),
+
+                # ── KPI strip ──────────────────────────────────
+                html.Div([
+                    stat_card("Total Records", f"{len(df):,}", f"{mem_mb} MB"),
+                    stat_card("Columns", f"{len(df.columns)}", f"{len(numeric_cols)} numeric"),
+                    stat_card("Data Completeness", f"{completeness}%",
+                              "Excellent" if completeness >= 95 else "Good" if completeness >= 80 else "Needs attention",
+                              color='#16A34A' if completeness >= 95 else '#D97706' if completeness >= 80 else '#DC2626',
+                              bg='#F0FDF4' if completeness >= 95 else '#FFFBEB' if completeness >= 80 else '#FEF2F2'),
+                    stat_card("Categorical Cols", f"{len(categorical_cols)}", "Available as filters"),
+                    stat_card("Numeric Cols", f"{len(numeric_cols)}", "Available as KPIs"),
+                    stat_card("Duplicate Rows", f"{dup_rows:,}",
+                              "None detected" if dup_rows == 0 else "Review recommended",
+                              color='#16A34A' if dup_rows == 0 else '#D97706',
+                              bg='#F0FDF4' if dup_rows == 0 else '#FFFBEB'),
+                ], style={
+                    'display': 'flex', 'gap': '12px', 'flexWrap': 'wrap',
+                    'padding': '16px 24px', 'backgroundColor': '#F8FAFF',
+                    'borderBottom': f'1px solid {BORDER}',
+                }),
+
+                # ── Column profile table ────────────────────────
+                html.Div([
+                    html.Div("Column-Level Profile", style={
+                        'fontSize': '13px', 'fontWeight': '700', 'color': NAVY,
+                        'marginBottom': '12px', 'textTransform': 'uppercase', 'letterSpacing': '0.05em',
+                    }),
+                    html.Div(profile_table, style={'overflowX': 'auto'}),
+                ], style={'padding': '20px 24px', 'backgroundColor': '#FFFFFF'}),
+
+                # ── Data Preview ───────────────────────────────
+                html.Div([
+                    html.Div("Sample Data — First 5 Rows", style={
+                        'fontSize': '13px', 'fontWeight': '700', 'color': NAVY,
+                        'marginBottom': '12px', 'textTransform': 'uppercase', 'letterSpacing': '0.05em',
+                    }),
+                    html.Div([
+                        html.Table([
+                            html.Thead(html.Tr([html.Th(c, style=TH_STYLE) for c in df.columns])),
+                            html.Tbody([
+                                html.Tr([
+                                    html.Td(str(v)[:40], style={
+                                        'fontSize': '11px', 'padding': '7px 12px',
+                                        'borderBottom': f'1px solid {BORDER}',
+                                        'backgroundColor': '#F8FAFF' if i % 2 == 0 else '#FFFFFF',
+                                        'whiteSpace': 'nowrap',
+                                    })
+                                    for v in row
+                                ])
+                                for i, row in enumerate(df.head(5).values)
+                            ]),
+                        ], style={'width': '100%', 'borderCollapse': 'collapse', 'border': f'1px solid {BORDER}'})
+                    ], style={'overflowX': 'auto'}),
+                ], style={
+                    'padding': '20px 24px', 'backgroundColor': '#FAFBFC',
+                    'borderTop': f'1px solid {BORDER}',
+                }),
+
+                # ── Action footer ─────────────────────────────
+                html.Div([
+                    html.Div([
+                        html.Span(
+                            f"Dataset validated — {len(df):,} rows ready for analysis",
+                            style={'fontSize': '13px', 'color': TEXT_LIGHT},
+                        ),
+                        dbc.Button([
+                            "Proceed to Dashboard  →"
+                        ], id='btn-confirm-upload', size='lg', style={
+                            'backgroundColor': NAVY, 'borderColor': NAVY, 'color': '#FFFFFF',
+                            'fontWeight': '700', 'letterSpacing': '0.04em', 'padding': '10px 28px',
+                            'fontSize': '14px',
+                        }),
+                    ], style={'display': 'flex', 'justifyContent': 'space-between', 'alignItems': 'center'}),
+                ], style={
+                    'padding': '16px 24px', 'backgroundColor': '#F1F5F9',
+                    'borderTop': f'2px solid {GOLD}', 'borderRadius': '0 0 8px 8px',
+                }),
+            ], style={
+                'border': f'1px solid {BORDER}', 'borderRadius': '8px',
+                'boxShadow': '0 4px 20px rgba(0,0,0,0.08)', 'marginTop': '20px',
+                'overflow': 'hidden',
+            })
+
+            return html.Div(), [analysis_panel], db_upload_id
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return dbc.Alert(f"Error: {str(e)}", color="danger"), [], None
+
+    @app.callback(
