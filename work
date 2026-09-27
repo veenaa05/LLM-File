@@ -1,145 +1,230 @@
-class CacheManager:
-    """Manage user upload cache, manifest, and cleanup"""
+ @app.callback(
+    Output("download-dashboard-pdf", "data"),
+    Input("btn-download-pdf", "n_clicks"),
+    State("store-chart-export-data", "data"),
+    prevent_initial_call=True
+)
+    def download_pdf(n_clicks, chart_export_data):
 
-    UPLOAD_DIR = ".cache/user_uploads"
-    MANIFEST_PATH = ".cache/upload_manifest.json"
+        print("=" * 80)
+        print("DOWNLOAD ANALYSIS & INSIGHTS PDF CLICKED")
+        print("=" * 80)
 
-    @staticmethod
-    def ensure_directories():
-        """Create cache directories if they don't exist"""
-        Path(".cache").mkdir(exist_ok=True)
-        Path(CacheManager.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
+        if not chart_export_data:
+            print("[PDF] No chart data available")
+            raise PreventUpdate
 
-    @staticmethod
-    def save_upload(df, filename: str):
-        """Save DataFrame and profiles, create manifest entry
+        from datetime import datetime
+        from reportlab.pdfgen import canvas
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.utils import ImageReader
+        import plotly.io as pio
+        import io
 
-        Returns: (upload_id, profiles dict)
-        """
-        from core.data_profiler import DataProfiler
+        pdf_buffer = io.BytesIO()
 
-        CacheManager.ensure_directories()
+        page_width, page_height = A4
 
-        # Generate upload ID from timestamp
-        import secrets
-        upload_id = datetime.now().strftime("%Y%m%d-%H%M%S") + "-" + secrets.token_hex(4)
+        p = canvas.Canvas(
+            pdf_buffer,
+            pagesize=A4
+        )
 
+        # =========================================================
+        # REPORT HEADER
+        # =========================================================
 
-        # Profile the data
-        profiler = DataProfiler()
-        profiles = profiler.profile(df)
+        p.setFont("Helvetica-Bold", 22)
+        p.drawString(
+            45,
+            page_height - 55,
+            "Analysis & Insights"
+        )
 
-        # Save DataFrame pickle (for performance, consistent with existing codebase)
-        df_path = os.path.join(CacheManager.UPLOAD_DIR, f"{upload_id}.pkl")
-        with open(df_path, 'wb') as f:
-            pickle.dump(df, f)
+        p.setFont("Helvetica", 10)
+        p.drawString(
+            45,
+            page_height - 73,
+            "Interactive visualizations for deeper understanding"
+        )
 
-        # Save profiles JSON
-        profiles_path = os.path.join(CacheManager.UPLOAD_DIR, f"{upload_id}-profiles.json")
-        profiles_dict = {
-            name: {
-                'dtype': p.dtype,
-                'cardinality': p.cardinality,
-                'missing_pct': p.missing_pct,
-                'is_temporal': p.is_temporal,
-            }
-            for name, p in profiles.items()
-        }
-        with open(profiles_path, 'w') as f:
-            json.dump(profiles_dict, f, indent=2, default=str)
-            
-            
-        #  Update manifest safely
-            manifest = CacheManager.load_manifest()
+        p.setFont("Helvetica", 9)
+        p.drawRightString(
+            page_width - 45,
+            page_height - 73,
+            f"Generated: {datetime.now().strftime('%d-%b-%Y %H:%M')}"
+        )
 
-            #  Ensure structure exists
-            if 'uploads' not in manifest:
-                manifest['uploads'] = []
+        # Header line
+        p.line(
+            45,
+            page_height - 88,
+            page_width - 45,
+            page_height - 88
+        )
 
-            #  Set active upload
-            manifest['active_upload_id'] = upload_id
+        y = page_height - 120
 
-            #  Remove duplicate entry if exists
-            manifest['uploads'] = [
-                u for u in manifest.get('uploads', [])
-                if u.get('id') != upload_id
-            ]
+        # =========================================================
+        # CHARTS
+        # =========================================================
 
-            #  Add new upload entry
-            manifest['uploads'].append({
-                'id': upload_id,
-                'filename': filename,
-                'uploaded_at': datetime.now().isoformat(),
-                'rows': len(df),
-                'cols': len(df.columns),
-                'pickle_path': df_path,
-                'profiles_path': profiles_path
-            })
+        for index, chart in enumerate(chart_export_data):
 
-            #  Save manifest safely
-            CacheManager.save_manifest(manifest)
+            title = chart.get("title", f"Chart {index + 1}")
+            figure_json = chart.get("figure")
+            insight = chart.get("insight", "")
 
-            return upload_id, profiles    
+            if not figure_json:
+                continue
 
-    @staticmethod
-    def load_manifest() -> Dict:
-        """Load manifest, create if not exists"""
-        try:
-            with open(CacheManager.MANIFEST_PATH, 'r') as f:
-                return json.load(f)
-        except Exception as e:
-            print(f"[WARN] Manifest load failed: {e}")
-            return {'active_upload_id': None, 'uploads': []}
+            # -----------------------------------------------------
+            # New page if required
+            # -----------------------------------------------------
 
-    @staticmethod
-    def save_manifest(manifest: Dict):
-        """Save manifest to file safely"""
-        try:
-            # ✅ Ensure directory exists
-            Path(".cache").mkdir(exist_ok=True)
-            with open(CacheManager.MANIFEST_PATH, 'w') as f:
-                json.dump(manifest, f, indent=2, default=str)
-        except Exception as e:
-            print(f"[ERROR] Failed to save manifest: {e}")
+            if y < 250:
 
-    @staticmethod
-    def get_active_upload_path() -> Optional[str]:
-        """Get path to active upload pickle"""
-        manifest = CacheManager.load_manifest()
-        if manifest.get('active_upload_id'):
-            active_id = manifest['active_upload_id']
-            return os.path.join(CacheManager.UPLOAD_DIR, f"{active_id}.pkl")
-        return None
+                p.showPage()
 
-    @staticmethod
-    def get_active_upload_profiles_path() -> Optional[str]:
-        """Get path to active upload profiles JSON"""
-        manifest = CacheManager.load_manifest()
-        if manifest.get('active_upload_id'):
-            active_id = manifest['active_upload_id']
-            return os.path.join(CacheManager.UPLOAD_DIR, f"{active_id}-profiles.json")
-        return None
+                p.setFont("Helvetica-Bold", 22)
+                p.drawString(
+                    45,
+                    page_height - 55,
+                    "Analysis & Insights"
+                )
 
-    @staticmethod
-    def cleanup_old_uploads(days=7):
-        """Delete uploads older than N days"""
-        from datetime import timedelta
-        cutoff = datetime.now() - timedelta(days=days)
-        manifest = CacheManager.load_manifest()
+                p.setFont("Helvetica", 9)
+                p.drawRightString(
+                    page_width - 45,
+                    page_height - 55,
+                    f"Page {index + 2}"
+                )
 
-        remaining = []
-        for upload in manifest.get('uploads', []):
-            upload_time = datetime.fromisoformat(upload['uploaded_at'])
-            if upload_time > cutoff:
-                remaining.append(upload)
-            else:
-                # Delete old files
-                try:
-                    if os.path.exists(upload['pickle_path']):
-                        os.remove(upload['pickle_path'])
-                except Exception as e:
-                    print(f"[WARN] Failed to delete old upload: {e}")
+                y = page_height - 90
 
+            # -----------------------------------------------------
+            # Chart title
+            # -----------------------------------------------------
 
-        manifest['uploads'] = remaining
-        CacheManager.save_manifest(manifest)
+            p.setFont("Helvetica-Bold", 13)
+            clean_title = str(title).replace("_", " ").strip()
+            p.drawString(
+                45,
+                y,
+                clean_title
+            )
+            y -= 18
+            # -----------------------------------------------------
+            # Convert Plotly figure → PNG
+            # -----------------------------------------------------
+
+            try:
+
+                png_bytes = pio.to_image(
+                    figure_json,
+                    format="png",
+                    width=1000,
+                    height=600,
+                    scale=1.5
+                )
+
+                image_buffer = io.BytesIO(png_bytes)
+                chart_width = page_width - 90
+                chart_height = chart_width * 0.60
+                p.drawImage(
+                    ImageReader(image_buffer),
+                    45,
+                    y - chart_height,
+                    width=chart_width,
+                    height=chart_height,
+                    preserveAspectRatio=True,
+                    anchor='c'
+                )
+
+                y -= chart_height + 20
+            except Exception as e:
+                print(
+                    f"[PDF] Could not export chart "
+                    f"{index + 1}: {e}"
+                )
+                p.setFont("Helvetica", 9)
+                p.drawString(
+                    45,
+                    y,
+                    "Chart could not be rendered in PDF."
+                )
+                y -= 25
+            # -----------------------------------------------------
+            # Analyst Insight
+            # -----------------------------------------------------
+
+            if insight:
+                if y < 100:
+                    p.showPage()
+                    y = page_height - 70
+                p.setFont("Helvetica-Bold", 9)
+                p.drawString(
+                    45,
+                    y,
+                    "ANALYST INSIGHT"
+                )
+                y -= 14
+                p.setFont("Helvetica", 9)
+                # Wrap long insight text
+                words = str(insight).split()
+                line = ""
+                for word in words:
+
+                    test_line = (
+                        line + " " + word
+                    ).strip()
+
+                    if p.stringWidth(
+                        test_line,
+                        "Helvetica",
+                        9
+                    ) > page_width - 100:
+
+                        p.drawString(
+                            45,
+                            y,
+                            line
+                        )
+
+                        y -= 12
+                        line = word
+
+                    else:
+
+                        line = test_line
+
+                if line:
+
+                    p.drawString(
+                        45,
+                        y,
+                        line
+                    )
+
+                    y -= 15
+
+            # Space before next chart
+            y -= 20
+
+        # =========================================================
+        # FINISH
+        # =========================================================
+
+        p.save()
+
+        pdf_buffer.seek(0)
+
+        print(
+            f"[PDF] Exported {len(chart_export_data)} charts"
+        )
+
+        return dcc.send_bytes(
+            pdf_buffer.getvalue(),
+            "analysis_insights_report.pdf"
+        )
+        
