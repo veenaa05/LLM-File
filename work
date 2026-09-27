@@ -1,1 +1,40 @@
+def get_cached_dataframe():
+    """Load dataframe from cache"""
+    df = None
+    try:
+        from core.cache_manager import CacheManager
+        active_path = CacheManager.get_active_upload_path()
+        if active_path and os.path.exists(active_path):
+            with open(active_path, 'rb') as f:
+                df = pickle.load(f)
+    except Exception as e:
+        print(f"[WARN] Failed to load active upload: {e}")
+
+    if df is None:
+        try:
+            with open(df_pickle_path, 'rb') as f:
+                df = pickle.load(f)
+        except Exception as e:
+            print(f"[ERROR] Failed to load cached dataframe: {e}")
+            return None
+
+    return df.copy()
+
+def load_cached_profiles():
+    """Load column profiles"""
+    try:
+        from core.cache_manager import CacheManager
+        upload_profiles_path = CacheManager.get_active_upload_profiles_path()
+        if upload_profiles_path and os.path.exists(upload_profiles_path):
+            with open(upload_profiles_path, 'r') as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"[WARN] Failed to load upload profiles: {e}")
+
+    try:
+        with open(profiles_json_path, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"[WARN] Could not load profiles: {e}")
+        return {}
 
