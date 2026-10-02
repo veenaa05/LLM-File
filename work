@@ -1,1 +1,25 @@
+/* ==========================================================
+   CONFIG PAGE - KPI DROPDOWN HEIGHT FIX
+========================================================== */
 
+.config-kpi-selection .dash-dropdown .Select-menu-outer {
+    max-height: none !important;
+}
+
+.config-kpi-selection .dash-dropdown .Select-menu {
+    max-height: none !important;
+}
+
+
+
+//////
+
+dcc.Dropdown(
+    id='kpi-column-selector',
+    options=[{'label': col, 'value': col} for col in numeric_cols],
+    multi=True,
+    placeholder="Select columns to add as KPIs...",
+    className='config-kpi-dropdown',
+    maxHeight=400,
+    style={'width': '100%', 'marginBottom': '20px'}
+),
