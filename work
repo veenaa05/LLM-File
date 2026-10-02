@@ -1,16 +1,3 @@
-"""Page 2: Configuration - User selects KPIs, filters, and aggregations"""
-from io import StringIO
-from dash.exceptions import PreventUpdate
-import pandas as pd
-from dash import html, dcc, Input, Output, State, callback, ALL, ctx
-from dashboard import llm_analyzer   # ✅ import global analyzer
-import dash
-from dash import dcc
-import dash_bootstrap_components as dbc
-from core.config import PRIMARY_BG, CARD_BG, TEXT, TEXT_LIGHT, BORDER, PRIMARY, SUCCESS, WARNING
-from core.session_state import KPISelection, FilterSelection
-import uuid
-
 def generate_config_page(df: pd.DataFrame, profiles: dict, confirmed_dtypes: dict) -> html.Div:
     """
     Generate the configuration page layout
