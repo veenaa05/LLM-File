@@ -1,1 +1,17 @@
+/* FILTER COLUMN DROPDOWN - SAME SIZE AS KPI */
+.config-filter-selection .dash-dropdown-content {
+    position: relative !important;
+    z-index: 99999999 !important;
+    background: #ffffff !important;
+    opacity: 1 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+}
 
+.config-filter-selection .dash-options-list {
+    background: #ffffff !important;
+    z-index: 99999999 !important;
+}
+
+.config-filter-selection .dash-options-list-option {
+    background: #ffffff !important;
+}
