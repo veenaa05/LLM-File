@@ -1,1 +1,17 @@
+for i, item in enumerate(stored_kpis):
 
+    column = item.get('column')
+    aggregation = item.get('aggregation', 'sum')
+    label = item.get('label')
+
+    kpi_id = column.replace(' ', '_')
+
+    kpi_items.append(
+        create_kpi_item(
+            kpi_id,
+            column,
+            aggregation,
+            label,
+            z_index=1000 - i
+        )
+    )
