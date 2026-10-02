@@ -1,1 +1,50 @@
+.config-kpi-selection .config-kpi-dropdown {
+    position: relative !important;
+    z-index: 9999999 !important;
+}
 
+.config-kpi-selection .config-kpi-dropdown .dash-dropdown-menu {
+    z-index: 99999999 !important;
+}
+
+.config-kpi-selection .config-kpi-dropdown .Select-menu-outer {
+    z-index: 99999999 !important;
+}
+
+.config-kpi-selection .config-kpi-dropdown .Select-menu {
+    z-index: 99999999 !important;
+}
+
+
+
+
+:::::::///--::::
+
+/* ==========================================================
+   CONFIG PAGE - KPI DROPDOWN OVERLAY FIX
+========================================================== */
+
+.config-kpi-selection {
+    position: relative !important;
+    z-index: 10000000 !important;
+    overflow: visible !important;
+}
+
+.config-kpi-selection .config-kpi-dropdown {
+    position: relative !important;
+    z-index: 9999999 !important;
+}
+
+.config-kpi-selection .config-kpi-dropdown .dash-dropdown-menu {
+    z-index: 99999999 !important;
+}
+
+.config-kpi-selection .config-kpi-dropdown .Select-menu-outer {
+    z-index: 99999999 !important;
+    background: #ffffff !important;
+}
+
+.config-kpi-selection .config-kpi-dropdown .Select-menu {
+    z-index: 99999999 !important;
+    background: #ffffff !important;
+}
