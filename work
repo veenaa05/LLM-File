@@ -1,1 +1,17 @@
+for col in selected_columns:
+    if col not in existing_columns:
 
+        dtype = confirmed_dtypes.get(col, 'categorical')
+
+        if dtype == 'numeric':
+            aggregation = 'sum'
+            label = f'Sum of {col}'
+        else:
+            aggregation = 'count'
+            label = f'Count of {col}'
+
+        stored_kpis.append({
+            'column': col,
+            'aggregation': aggregation,
+            'label': label
+        })
