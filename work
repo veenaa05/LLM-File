@@ -1,17 +1,1 @@
-numeric_cols = [col for col, dtype in confirmed_dtypes.items() if dtype == 'numeric']
 
-# All columns except columns explicitly marked as ignore
-kpi_cols = [
-    col for col, dtype in confirmed_dtypes.items()
-    if dtype != 'ignore'
-]
-
-categorical_cols = [
-    col for col, dtype in confirmed_dtypes.items()
-    if dtype == 'categorical'
-]
-
-temporal_cols = [
-    col for col, dtype in confirmed_dtypes.items()
-    if dtype == 'temporal'
-]
