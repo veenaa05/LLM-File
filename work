@@ -1,1 +1,13 @@
+column = item.get('column')
+dtype = confirmed_dtypes.get(column, 'categorical')
 
+aggregation = item.get('aggregation', 'sum')
+label = item.get('label')
+
+if dtype != 'numeric':
+    aggregation = 'count'
+
+    if not label or label.startswith('Sum of'):
+        label = f'Count of {column}'
+
+kpi_id = column.replace(' ', '_')
