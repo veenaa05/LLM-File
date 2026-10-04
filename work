@@ -1,1 +1,56 @@
+filter_values = sorted(
+    df[col].dropna().unique().astype(str).tolist()
+)
 
+filter_control = html.Div([
+    html.Label(
+        col,
+        style={
+            'fontWeight': 'bold',
+            'fontSize': '14px',
+            'color': TEXT
+        }
+    ),
+
+    dcc.Dropdown(
+        id={'type': 'filter-dropdown', 'index': col},
+        options=[
+            {'label': v, 'value': v}
+            for v in filter_values
+        ],
+        multi=True,
+        placeholder="Select values...",
+        searchable=True,
+        labels={
+            'select_all': 'Select All',
+            'deselect_all': 'Deselect All',
+            'search': 'Search',
+        },
+        className='config-filter-dropdown',
+        maxHeight=300,
+        style={'width': '100%'}
+    )
+], style={
+    'flex': '1',
+    'marginRight': '15px'
+})
+
+
+;;()$$&&&&&&&
+dcc.Dropdown(
+    id='test-deselect-dropdown',
+    options=[
+        {'label': 'Apple', 'value': 'Apple'},
+        {'label': 'Banana', 'value': 'Banana'},
+        {'label': 'Orange', 'value': 'Orange'},
+    ],
+    multi=True,
+    placeholder="Test dropdown...",
+    labels={
+        'select_all': 'Select All',
+        'deselect_all': 'Deselect All',
+        'search': 'Search',
+    },
+    maxHeight=300,
+    style={'width': '100%', 'marginTop': '20px'}
+)
