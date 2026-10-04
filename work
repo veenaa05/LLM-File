@@ -1,1 +1,115 @@
+filter_values = sorted(
+    df[col].dropna().astype(str).unique().tolist()
+)
 
+filter_control = html.Div([
+    html.Label(
+        col,
+        style={
+            'fontWeight': 'bold',
+            'fontSize': '14px',
+            'color': TEXT
+        }
+    ),
+
+    # Search box
+    dcc.Input(
+        id={'type': 'filter-search', 'index': col},
+        type='text',
+        placeholder='Search',
+        debounce=False,
+        style={
+            'width': '100%',
+            'padding': '8px 10px',
+            'marginTop': '6px',
+            'marginBottom': '8px',
+            'border': '1px solid #D1D5DB',
+            'borderRadius': '6px',
+            'fontSize': '13px'
+        }
+    ),
+
+    # Select All / Deselect All
+    html.Div([
+        html.Button(
+            'Select All',
+            id={'type': 'filter-select-all', 'index': col},
+            n_clicks=0,
+            style={
+                'border': 'none',
+                'background': 'transparent',
+                'color': '#2563EB',
+                'fontSize': '13px',
+                'fontWeight': '500',
+                'padding': '4px 8px 4px 0',
+                'cursor': 'pointer'
+            }
+        ),
+
+        html.Button(
+            'Deselect All',
+            id={'type': 'filter-deselect-all', 'index': col},
+            n_clicks=0,
+            style={
+                'border': 'none',
+                'background': 'transparent',
+                'color': '#2563EB',
+                'fontSize': '13px',
+                'fontWeight': '500',
+                'padding': '4px 8px',
+                'cursor': 'pointer'
+            }
+        )
+    ], style={
+        'display': 'flex',
+        'alignItems': 'center',
+        'marginBottom': '5px'
+    }),
+
+    # Checkbox list
+    dcc.Checklist(
+        id={'type': 'filter-options', 'index': col},
+        options=[
+            {
+                'label': v,
+                'value': v
+            }
+            for v in filter_values
+        ],
+        value=[],
+        style={
+            'maxHeight': '220px',
+            'overflowY': 'auto',
+            'border': '1px solid #E5E7EB',
+            'borderRadius': '6px',
+            'padding': '8px'
+        },
+        inputStyle={
+            'marginRight': '8px',
+            'marginLeft': '2px'
+        },
+        labelStyle={
+            'display': 'block',
+            'padding': '5px 4px',
+            'fontSize': '13px',
+            'cursor': 'pointer'
+        }
+    ),
+
+    # Keep the existing filter-dropdown ID for dashboard callbacks.
+    # It will be synchronized with the checklist in the next step.
+    dcc.Dropdown(
+        id={'type': 'filter-dropdown', 'index': col},
+        options=[
+            {'label': v, 'value': v}
+            for v in filter_values
+        ],
+        value=[],
+        multi=True,
+        style={'display': 'none'}
+    )
+
+], style={
+    'flex': '1',
+    'marginRight': '15px'
+})
