@@ -1,1 +1,27 @@
+filter_values = sorted(
+    df[col].dropna().unique().astype(str).tolist()
+)
 
+filter_control = html.Div([
+    html.Label(
+        col,
+        style={
+            'fontWeight': 'bold',
+            'fontSize': '14px',
+            'color': TEXT
+        }
+    ),
+
+    dcc.Dropdown(
+        id={'type': 'filter-dropdown', 'index': col},
+        options=[
+            {'label': v, 'value': v}
+            for v in filter_values
+        ],
+        value=filter_values,
+        multi=True,
+        clearable=False,
+        maxHeight=300,
+        style={'width': '100%'}
+    )
+], style={'flex': '1', 'marginRight': '15px'})
