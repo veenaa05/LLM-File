@@ -1,1 +1,23 @@
+"""Create a filter configuration card"""
 
+if dtype == 'numeric':
+    filter_options = [
+        {'label': 'Numeric Range', 'value': 'numeric_range'}
+    ]
+    filter_type = 'numeric_range'
+
+elif dtype == 'temporal':
+    filter_options = [
+        {'label': 'Date Range', 'value': 'date_range'}
+    ]
+    filter_type = 'date_range'
+
+else:
+    # categorical / alphanumeric / text
+    filter_options = [
+        {'label': 'Dropdown', 'value': 'dropdown'}
+    ]
+    filter_type = 'dropdown'
+
+if label is None:
+    label = column
