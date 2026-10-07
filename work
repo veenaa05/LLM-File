@@ -1,1 +1,84 @@
+@staticmethod
+def format_analysis(llm_result) -> Dict:
+    """Convert LLM analysis to formatted dashboard insights."""
 
+    if not llm_result:
+        return None
+
+    # ---------------------------------------------------------
+    # Handle DashboardConfig object or dictionary
+    # ---------------------------------------------------------
+    if isinstance(llm_result, dict):
+        reasoning = llm_result.get('reasoning', '')
+        charts = llm_result.get('charts', [])
+        kpis = llm_result.get('kpis', [])
+        filters = llm_result.get('filters', [])
+        ai_analysis = llm_result.get('ai_analysis', {})
+    else:
+        reasoning = getattr(llm_result, 'reasoning', '')
+        charts = getattr(llm_result, 'charts', [])
+        kpis = getattr(llm_result, 'kpis', [])
+        filters = getattr(llm_result, 'filters', [])
+        ai_analysis = getattr(llm_result, 'ai_analysis', {})
+
+    # ---------------------------------------------------------
+    # Preserve the complete AI-generated analysis
+    # ---------------------------------------------------------
+    if not isinstance(ai_analysis, dict):
+        ai_analysis = {}
+
+    executive_summary = ai_analysis.get(
+        'executive_summary',
+        {}
+    )
+
+    if not isinstance(executive_summary, dict):
+        executive_summary = {}
+
+    # The LLM currently returns narrative at the top level.
+    # Move it into executive_summary so the dashboard can use it.
+    if not executive_summary.get('narrative'):
+        executive_summary['narrative'] = ai_analysis.get(
+            'narrative',
+            ''
+        )
+
+    return {
+        "overview": AnalysisFormatter._generate_overview(llm_result),
+
+        "reasoning": reasoning,
+
+        "executive_summary": executive_summary,
+
+        "trends": ai_analysis.get('trends', []),
+
+        "data_quality": ai_analysis.get(
+            'data_quality',
+            {}
+        ),
+
+        "insights": ai_analysis.get(
+            'insights',
+            []
+        ),
+
+        "recommendations": ai_analysis.get(
+            'recommendations',
+            []
+        ),
+
+        "charts_analysis": [
+            AnalysisFormatter._format_chart_insight(chart)
+            for chart in (charts or [])
+        ],
+
+        "kpis_analysis": [
+            AnalysisFormatter._format_kpi_insight(kpi)
+            for kpi in (kpis or [])
+        ],
+
+        "filters_analysis": [
+            AnalysisFormatter._format_filter_insight(f)
+            for f in (filters or [])
+        ],
+    }
