@@ -1,1 +1,63 @@
+html.Div([
+    html.H6(
+        "Recommended KPIs",
+        style={
+            "fontWeight": "700",
+            "color": "#2D3748",
+            "marginBottom": "10px"
+        }
+    ),
+
+    html.Div(
+        kpi_components
+        if kpi_components
+        else [
+            html.Div(
+                "No KPIs recommended.",
+                style={"color": "#718096"}
+            )
+        ]
+    )
+
+], style={
+    "background": "#FFFFFF",
+    "border": "1px solid #E2E8F0",
+    "padding": "15px",
+    "borderRadius": "8px",
+    "marginBottom": "15px"
+}),
+
+
+(;;;())//:(((((
+
+html.Div([
+    html.H6(
+        "Recommended Charts",
+        style={
+            "fontWeight": "700",
+            "color": "#2D3748",
+            "marginBottom": "10px"
+        }
+    ),
+
+    html.Div(
+        chart_components
+        if chart_components
+        else [
+            html.Div(
+                "No charts recommended.",
+                style={"color": "#718096"}
+            )
+        ]
+    )
+
+], style={
+    "background": "#FFFFFF",
+    "border": "1px solid #E2E8F0",
+    "padding": "15px",
+    "borderRadius": "8px",
+    "marginBottom": "15px"
+})
+
+;())))£££££:56788
 
