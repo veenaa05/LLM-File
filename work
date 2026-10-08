@@ -1,16 +1,1 @@
- # EXECUTIVE SUMMARY (Big Four style - appears first!)
-        html.Div(
-            id='executive-summary-container',
-            children=executive_summary_card(
-                title="Executive Summary",
-                findings=exec_summary.get('key_findings', ['Dashboard ready. Run AI Suggestions for executive briefing.'])
-                        if exec_summary else ['Dashboard ready. Run AI Suggestions for executive briefing.'],
-                health_score=_norm_score(exec_summary.get('data_quality_score', 0.85)) if exec_summary else 0.85,
-                # health_score=_norm_score((exec_summary or {}).get('data_quality_score', 0.85)),
-                status='healthy' if exec_summary and _norm_score(exec_summary.get('data_quality_score', 0)) > 0.8 else 'caution',
-                narrative=exec_summary.get('narrative', '') if exec_summary else '',
-                risk_flags=exec_summary.get('risk_flags', []) if exec_summary else [],
-                priority_action=exec_summary.get('priority_action', '') if exec_summary else '',
-            ),
-            style={'marginBottom': SPACING_LG}
-        ),
+
