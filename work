@@ -1,1 +1,353 @@
+def _find_existing_column(df, candidates):
+    """Return the first matching column from a list of possible names."""
+    for candidate in candidates:
+        if candidate in df.columns:
+            return candidate
 
+    # Case-insensitive fallback
+    lower_map = {str(c).strip().lower(): c for c in df.columns}
+
+    for candidate in candidates:
+        match = lower_map.get(str(candidate).strip().lower())
+        if match:
+            return match
+
+    return None
+
+
+()))₹₹&&₹:;;))₹₹₹₹₹
+
+    # ═══════════════════════════════════════════════════════════════
+    # DYNAMIC EXECUTIVE SUMMARY
+    # Updates when dashboard filters change.
+    # Uses Python calculations on filtered data — NO LLM call.
+    # ═══════════════════════════════════════════════════════════════
+
+    @app.callback(
+        Output('executive-summary-container', 'children'),
+        Input({'type': 'filter-dropdown', 'index': ALL}, 'value'),
+        State('store-filter-selections-dashboard', 'data'),
+        prevent_initial_call=True
+    )
+    def update_executive_summary(filter_values, filter_selections):
+
+        print("=" * 80)
+        print("[EXEC SUMMARY] Filter changed")
+        print("[EXEC SUMMARY] Filter values:", filter_values)
+        print("[EXEC SUMMARY] Filter selections:", filter_selections)
+        print("=" * 80)
+
+        try:
+            # ---------------------------------------------------------
+            # Load original dataframe
+            # ---------------------------------------------------------
+
+            if not get_cached_df:
+                raise PreventUpdate
+
+            df = get_cached_df()
+
+            if df is None or df.empty:
+                return html.Div(
+                    "No data available for executive summary.",
+                    style={
+                        'padding': '20px',
+                        'color': '#DC2626'
+                    }
+                )
+
+            filtered_df = df.copy()
+
+            # ---------------------------------------------------------
+            # Apply dashboard filters
+            # Same filtering logic used by KPI/charts
+            # ---------------------------------------------------------
+
+            if (
+                isinstance(filter_selections, list)
+                and isinstance(filter_values, list)
+            ):
+                for filter_sel, filter_value in zip(
+                    filter_selections,
+                    filter_values
+                ):
+
+                    if not isinstance(filter_sel, dict):
+                        continue
+
+                    col = filter_sel.get('column', '')
+
+                    if not col or col not in filtered_df.columns:
+                        continue
+
+                    # Multi-select
+                    if isinstance(filter_value, list):
+
+                        if not filter_value or "All" in filter_value:
+                            continue
+
+                        filtered_df = filtered_df[
+                            filtered_df[col].astype(str).isin(
+                                [str(v) for v in filter_value]
+                            )
+                        ]
+
+                    # Single-select
+                    else:
+
+                        if filter_value and filter_value != "All":
+                            filtered_df = filtered_df[
+                                filtered_df[col].astype(str)
+                                == str(filter_value)
+                            ]
+
+            # ---------------------------------------------------------
+            # Find important business columns
+            # ---------------------------------------------------------
+
+            invoice_col = _find_existing_column(
+                filtered_df,
+                [
+                    "Invoice Amount",
+                    "InvoiceAmount",
+                    "Invoice Amt"
+                ]
+            )
+
+            balance_col = _find_existing_column(
+                filtered_df,
+                [
+                    "Balance Amount",
+                    "BalanceAmount",
+                    "Balance Amt"
+                ]
+            )
+
+            collection_col = _find_existing_column(
+                filtered_df,
+                [
+                    "Balance Collection Amount",
+                    "BalanceCollectionAmount",
+                    "Collection Amount"
+                ]
+            )
+
+            due_days_col = _find_existing_column(
+                filtered_df,
+                [
+                    "Due Days",
+                    "DueDays"
+                ]
+            )
+
+            invoice_no_col = _find_existing_column(
+                filtered_df,
+                [
+                    "Invoice No",
+                    "Invoice Number",
+                    "InvoiceNo"
+                ]
+            )
+
+            # ---------------------------------------------------------
+            # Basic metrics
+            # ---------------------------------------------------------
+
+            record_count = len(filtered_df)
+
+            total_invoice = 0
+            total_balance = 0
+            total_collection = 0
+            avg_due_days = 0
+
+            if invoice_col:
+                invoice_values = pd.to_numeric(
+                    filtered_df[invoice_col],
+                    errors='coerce'
+                )
+                total_invoice = invoice_values.sum()
+
+            if balance_col:
+                balance_values = pd.to_numeric(
+                    filtered_df[balance_col],
+                    errors='coerce'
+                )
+                total_balance = balance_values.sum()
+
+            if collection_col:
+                collection_values = pd.to_numeric(
+                    filtered_df[collection_col],
+                    errors='coerce'
+                )
+                total_collection = collection_values.sum()
+
+            if due_days_col:
+                due_values = pd.to_numeric(
+                    filtered_df[due_days_col],
+                    errors='coerce'
+                )
+                avg_due_days = due_values.mean()
+
+            # ---------------------------------------------------------
+            # Create findings
+            # ---------------------------------------------------------
+
+            findings = []
+
+            findings.append(
+                f"The selected data contains {record_count:,} "
+                f"invoice records."
+            )
+
+            if invoice_col:
+                findings.append(
+                    f"Total invoiced amount is approximately "
+                    f"{_fmt(total_invoice)}."
+                )
+
+            if balance_col:
+                findings.append(
+                    f"The current balance amount is approximately "
+                    f"{_fmt(total_balance)}."
+                )
+
+            if collection_col:
+                findings.append(
+                    f"Balance collection amount totals approximately "
+                    f"{_fmt(total_collection)}."
+                )
+
+            if due_days_col and pd.notna(avg_due_days):
+                findings.append(
+                    f"Average due period is "
+                    f"{avg_due_days:.1f} days."
+                )
+
+            # ---------------------------------------------------------
+            # Data quality for the filtered records
+            # ---------------------------------------------------------
+
+            if record_count > 0:
+
+                total_cells = (
+                    filtered_df.shape[0] *
+                    filtered_df.shape[1]
+                )
+
+                missing_cells = filtered_df.isna().sum().sum()
+
+                completeness = (
+                    (1 - missing_cells / total_cells) * 100
+                    if total_cells
+                    else 100
+                )
+
+            else:
+                completeness = 0
+
+            if completeness >= 95:
+                health = "healthy"
+            elif completeness >= 80:
+                health = "caution"
+            else:
+                health = "caution"
+
+            # ---------------------------------------------------------
+            # Dynamic narrative
+            # ---------------------------------------------------------
+
+            narrative_parts = [
+                f"This filtered view contains {record_count:,} "
+                f"records."
+            ]
+
+            if invoice_col:
+                narrative_parts.append(
+                    f"Total invoiced value is {_fmt(total_invoice)}."
+                )
+
+            if balance_col:
+                narrative_parts.append(
+                    f"Outstanding balance is {_fmt(total_balance)}."
+                )
+
+            if due_days_col and pd.notna(avg_due_days):
+                narrative_parts.append(
+                    f"The average due period is "
+                    f"{avg_due_days:.1f} days."
+                )
+
+            narrative = " ".join(narrative_parts)
+
+            # ---------------------------------------------------------
+            # Risk flags
+            # ---------------------------------------------------------
+
+            risk_flags = []
+
+            if record_count == 0:
+                risk_flags.append(
+                    "No records match the selected filters."
+                )
+
+            if completeness < 80:
+                risk_flags.append(
+                    f"Data completeness is only "
+                    f"{completeness:.1f}% for the filtered records."
+                )
+
+            if due_days_col and pd.notna(avg_due_days):
+                if avg_due_days > 90:
+                    risk_flags.append(
+                        f"Average due period is high at "
+                        f"{avg_due_days:.1f} days."
+                    )
+
+            # ---------------------------------------------------------
+            # Priority action
+            # ---------------------------------------------------------
+
+            if record_count == 0:
+                priority_action = (
+                    "Adjust the selected filters to view available records."
+                )
+            elif risk_flags:
+                priority_action = (
+                    "Review the highlighted data-quality or receivables risks."
+                )
+            else:
+                priority_action = (
+                    "Review the filtered business segments and "
+                    "focus on the largest value or balance contributors."
+                )
+
+            # ---------------------------------------------------------
+            # Build same Executive Summary card
+            # ---------------------------------------------------------
+
+            return executive_summary_card(
+                title="Executive Summary",
+                findings=findings,
+                health_score=completeness / 100,
+                status=health,
+                narrative=narrative,
+                risk_flags=risk_flags,
+                priority_action=priority_action,
+            )
+
+        except Exception as e:
+
+            import traceback
+
+            print(
+                f"[ERROR] Executive summary callback failed: {e}"
+            )
+            print(traceback.format_exc())
+
+            return html.Div(
+                "Unable to generate filtered executive summary.",
+                style={
+                    'padding': '20px',
+                    'color': '#DC2626'
+                }
+            )
